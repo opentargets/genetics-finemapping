@@ -1,0 +1,15 @@
+# Reference sample for calucling LD matrix
+ref_panel: /Users/em21/Projects/reference_data_download/1000Genomes_phase3/plink_format/EUR/1kg_p3.20130502.EUR.{chrom}
+
+# GCTA cojo select parameters
+cojo_colin: 0.9   # Don't include SNPs that are colinear with an already selected SNP
+cojo_wind:  10000 # (Kb) Assume SNPs outside window are in linkage equilibrium
+cojo_p:     5e-8  # P-value for declaring signficant
+cojo_maf:   0.01  # Min minor allele freq
+
+# Identifying nearby loci to run conditional analysis for
+cond_multisig_wind: 500 # (Kb) Loci within this distance of each other will have sum stats recomputed using conditional analysis
+
+# GCTA cojo conditional parameters
+cond_extract_wind: 500 # (Kb) Extract variants +- this window for finemapping
+cond_maf: 0.01 # Min minor allele freq
