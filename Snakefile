@@ -10,14 +10,16 @@
 #
 
 import os
+import sys
 import itertools
 import pandas as pd
 import subprocess as sp
 
 # Args
 configfile: "configs/config.yaml"
-studies = ["SHARE-without23andMe"]
-chroms = [1, 22]
+studies,  = glob_wildcards("data/{study}.txt.gz")
+chroms = [str(x) for x in range(1, 23)] + ["X"]
+# chroms = "1"
 
 #
 # Stage 1: Define independent loci using GCTA COJO slct ------------------------
@@ -104,7 +106,7 @@ rule finemap_loci:
     input:
         make_finemap_targets(
             in_format="results/{study}/indep_loci/{chrom}.gcta_slct.jma.cojo",
-            out_format="results/{study}/cond_analysis/{chrom}.cond.{index_snp}.conditional_sumstats.tsv")
+            out_format="results/{study}/credible_set/{chrom}.cond.{index_snp}.credible_sets.tsv")
             # out_format="results/{study}/cond_analysis/{chrom}.cond.{index_snp}.snplist.txt")
 
 rule identify_multi_sig_loci:
@@ -180,3 +182,16 @@ rule run_conditional_analysis:
                    params["maf"],
                    output]
             sp.run(" ".join(str(x) for x in cmd), shell=True)
+
+rule credible_set_analysis:
+    input:
+        "results/{study}/cond_analysis/{chrom}.cond.{index_snp}.conditional_sumstats.tsv"
+    output:
+        "results/{study}/credible_set/{chrom}.cond.{index_snp}.credible_sets.tsv"
+    params:
+        prop_cases=0.6203537 # TODO get actual prop_cases from somewhere
+    shell:
+        "python scripts/credible_set_analysis.py "
+        "--inf {input} "
+        "--outf {output} "
+        "--prop_cases {params.prop_cases}"

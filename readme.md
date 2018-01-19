@@ -5,6 +5,8 @@ Finemapping pipeline for summary statistics. Currently only implements credible 
 
 TODO:
   - Write documentation
+  - Get proportion of cases for each study
+  - Combine credible set results into a single file per study
 
 ### Usage
 
