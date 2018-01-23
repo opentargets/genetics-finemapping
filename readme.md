@@ -7,6 +7,8 @@ TODO:
   - Write documentation
   - Get proportion of cases for each study
   - Combine credible set results into a single file per study
+  - Chromosome X currently isn't working
+  - Stage 1 currently fails if no SNPs are selected
 
 ### Usage
 

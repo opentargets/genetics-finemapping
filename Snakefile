@@ -1,6 +1,6 @@
 #!/usr/bin/env snakemake
 #
-# Ed Mountjoy <edward.mountjoy@sanger.ac.uk>
+# Ed Mountjoy
 #
 # Snakemake pipeline for credible set analysis using summary statistics.
 #
@@ -18,7 +18,8 @@ import subprocess as sp
 # Args
 configfile: "configs/config.yaml"
 studies,  = glob_wildcards("data/{study}.txt.gz")
-chroms = [str(x) for x in range(1, 23)] + ["X"]
+chroms = [str(x) for x in range(1, 23)]
+# chroms = "X"
 # chroms = "1"
 
 #
@@ -55,8 +56,9 @@ rule format_sumstats_for_gcta:
         '--n_col N '
         '--sep " "'
 
-# Use GCTA COJO slct to identify independent loci
 rule cojo_indep_loci:
+    """ Use GCTA COJO slct to identify independent loci
+    """
     input:
         "data/{study}.gcta_format.tsv"
     output:
@@ -83,31 +85,47 @@ rule cojo_indep_loci:
 # Stage 2: Credible set analysis for loci defined in stage 1 -------------------
 #
 
-def make_finemap_targets(in_format, out_format):
-    """ Reads GCTA cojo jma files to get index_snps for each study /chromosome.
-        Uses these to produce target files for finemapping
+def make_study_loci_dict(in_format="results/{study}/indep_loci/{chrom}.gcta_slct.jma.cojo"):
+    """ Reads the gcta jma (indepent loci file) to make a dictionary of loci
+        for each study.
     """
-    outfiles = []
+    d = {}
     for study, chrom in itertools.product(studies, chroms):
+        if study not in d: d[study] = {}
+        if chrom not in d[study]: d[study][chrom] = []
         in_file = in_format.format(study=study, chrom=chrom)
         if os.path.exists(in_file):
             with open(in_file, "r") as in_jma:
                 in_jma.readline() # Skip header
                 for line in in_jma:
                     index_snp = line.rstrip().split("\t")[1]
-                    outfiles.append(out_format.format(study=study,
-                                                      chrom=chrom,
-                                                      index_snp=index_snp))
+                    d[study][chrom].append(index_snp)
+    return d
+
+# Get dictionary of independent loci per study per chrom
+study_loci = make_study_loci_dict(in_format="results/{study}/indep_loci/{chrom}.gcta_slct.jma.cojo")
+
+def make_finemap_targets(study_loci, out_format):
+    """ Reads GCTA cojo jma files to get index_snps for each study /chromosome.
+        Uses these to produce target files for finemapping
+    """
+    outfiles = []
+    for study in study_loci:
+        for chrom in study_loci[study]:
+            for index_snp in study_loci[study][chrom]:
+                outfiles.append(out_format.format(study=study,
+                                                  chrom=chrom,
+                                                  index_snp=index_snp))
     return outfiles
 
 rule finemap_loci:
     """ Make targets for finemapping.
     """
     input:
-        make_finemap_targets(
-            in_format="results/{study}/indep_loci/{chrom}.gcta_slct.jma.cojo",
-            out_format="results/{study}/credible_set/{chrom}.cond.{index_snp}.credible_sets.tsv")
-            # out_format="results/{study}/cond_analysis/{chrom}.cond.{index_snp}.snplist.txt")
+        # make_finemap_targets(
+        #     study_loci,
+        #     out_format="results/{study}/credible_set/{chrom}.cond.{index_snp}.credible_sets.tsv")
+        expand("results/{study}/stats/histogram.credible_set.stats.txt", study=studies)
 
 rule identify_multi_sig_loci:
     """ Clusters the independent loci to identify SNPs within N KB of each other
@@ -184,6 +202,9 @@ rule run_conditional_analysis:
             sp.run(" ".join(str(x) for x in cmd), shell=True)
 
 rule credible_set_analysis:
+    """ Runs credible set analysis for each indepenedent locus using summary
+        stats that are conditional on other nearby index snps
+    """
     input:
         "results/{study}/cond_analysis/{chrom}.cond.{index_snp}.conditional_sumstats.tsv"
     output:
@@ -195,3 +216,37 @@ rule credible_set_analysis:
         "--inf {input} "
         "--outf {output} "
         "--prop_cases {params.prop_cases}"
+
+def list_merge_input_files(study, informat="results/{study}/credible_set/{chrom}.cond.{index_snp}.credible_sets.tsv"):
+    for chrom in study_loci[study]:
+        for index_snp in study_loci[study][chrom]:
+            yield informat.format(study=study, chrom=chrom, index_snp=index_snp)
+
+rule merge_to_bed_per_study:
+    """ Merges results of credible set analysis into a single bed file per
+        study
+    """
+    input:
+        lambda wildcards: list(list_merge_input_files(wildcards.study, informat="results/{study}/credible_set/{chrom}.cond.{index_snp}.credible_sets.tsv"))
+    output:
+        "results/{study}/credible_set/merged.{credset}.credible_set.bed"
+    shell:
+        "python scripts/credset_to_bed.py "
+        "--infiles {input} "
+        "--outbed {output} "
+        "--credset {wildcards.credset}"
+
+rule credset_stats:
+    """ Calc average set size, etc.. and make plots
+    """
+    input:
+        "results/{study}/credible_set/merged.95.credible_set.bed",
+        "results/{study}/credible_set/merged.99.credible_set.bed"
+    output:
+        # plot="results/{study}/stats/histogram.credible_set.png",
+        stat="results/{study}/stats/histogram.credible_set.stats.txt"
+    shell:
+        "python scripts/plot_histogram.py --infiles {input} "
+        "--out {output.stat} "
+        # "--plot {output.plot} "
+        "--names 95% 99%"
