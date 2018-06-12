@@ -3,6 +3,8 @@ Finemapping
 
 Finemapping pipeline for summary statistics. Currently only implements credible set analysis.
 
+Note: This readme is outdated (June 2018)
+
 TODO:
   - Write documentation
   - Get proportion of cases for each study
