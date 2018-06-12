@@ -19,6 +19,7 @@ Output cols:
 import sys
 import pandas as pd
 import argparse
+import re
 
 def main():
 
@@ -32,6 +33,10 @@ def main():
     # Process each locus
     for inf in args.infiles:
 
+        # Get index snp
+        mth_obj = re.search("\.cond\.(rs[0-9]+)\.credible_sets\.", inf)
+        index_snp = mth_obj.group(1)
+
         # Load and sort
         data = pd.read_csv(inf, sep="\t", header=0).sort_values("postprob_cumsum")
 
@@ -40,11 +45,10 @@ def main():
         data_cred = data.iloc[0:set_idx + 1, :]
 
         # Make out row
-        index_snp = str()
         out_row = [data_cred.iloc[0, 0],
                    min(data_cred.bp) - 1,
                    max(data_cred.bp) + 1,
-                   data_cred.iloc[0, 1],
+                   index_snp,
                    data_cred.shape[0],
                    ";".join(data_cred.SNP.tolist())]
         out_rows.append(out_row)

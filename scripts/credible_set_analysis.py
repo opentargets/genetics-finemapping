@@ -22,6 +22,11 @@ def main():
     # Load data
     data = pd.read_csv(args.inf, sep="\t")
 
+    # Need to fix pC == 0.0 as this will produce inf logABF. Set to min pC instead
+    if (data.pC == 0.0).any():
+        print("Warning: some pC == 0.0 in {0}\n - setting to min(pC)")
+        data.pC[data.pC == 0.0] = data.pC[data.pC != 0.0].min()
+
     # Calc ABFs
     # print(calc_abf(0.808621, 0.17690, 290365, 0.6203537)) # Should return -3.311501
     data["logABF"] = data.apply(

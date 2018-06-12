@@ -1,8 +1,5 @@
-channels:
-- bioconda
 dependencies:
 - python=3
-- snakemake
 - pandas
 - scipy
 - numpy
