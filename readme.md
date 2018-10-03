@@ -48,7 +48,7 @@ bsub -J collate_results -n 4 -q normal -R "select[mem>16000] rusage[mem=16000] s
 
 Independently associated top loci will be detected with GCTA stepwise selection procedure (cojo-slct) using UK10K (ALSPAC + TwinsUK) genotypes (N=3,781) as an LD reference. Index variants (top variant at each locus) will be kept if both the conditional and nominal p-values are less than 1e-5.
 
-Variant in the MHC region were pre-filtered (6:28477797–33448354 GRCh37).
+Variants in the MHC region were pre-filtered (6:28477797–33448354 GRCh37).
 
 #### Per locus conditional analysis
 
