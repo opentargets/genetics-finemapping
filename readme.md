@@ -1,25 +1,18 @@
-Finemapping
-===========
+Finemapping pipleine
+====================
 
-Finemapping pipeline for summary statistics. Currently only implements credible set analysis.
+Finemapping pipeline for Open Targets Genetics. The pipeline is currently bespoke to the Neale lab UK Biobank summary statistics (version 1) and must be run on a cluster using `bsub`.
 
-Note: This readme is outdated (June 2018)
+A generalised finemapping/colocalisation pipeline is under development ([analysis plan](https://docs.google.com/document/d/1m2XFvovzXtFKoH9J-aZriH69k54Wa5cYwQJEh7VrJAs/edit?usp=sharing)).
 
-TODO:
-  - Write documentation
-  - Get proportion of cases for each study
-  - When using better reference, RAM requirements will need increasing
-  - When using non-UKB sum stats, proportion of cases needs to be calculated from somewhere
+### Contents
+- [Requirements](#requirements)
+- [Usage](#usage)
+- [Methods](#methods)
 
-Issues:
-  - Chromosome X currently isn't working (error code 134), there are no X chrom SNPs in input
-  - Stage 1 currently fails if no SNPs are selected
-
-Questions:
-  - What do we want the threshold for defining independent loci to be? Currently set at 0.8.
-
-Requirements
-  - GCTA v1.91.1b (there is a bug in v1.91.2b which causes GCTA slct to produce unexpected results)
+### Requirements
+- GCTA >= v1.91.3 (there is a bug in v1.91.2b which causes GCTA slct to produce unexpected results)
+- `conda`
 
 ### Usage
 
@@ -33,10 +26,15 @@ source activate finemapping
 # Alter configuration file
 nano configs/config.yaml
 
-# Execute workflow (locally)
-snakemake -p define_loci
-snakemake -p finemap_loci
+# Execute steps sequentially (on cluster using BSUB)
+bsub < 1a.define_loci.bsub_wrapper.sh
+bsub < 2a.finemap_loci_multisig.bsub_wrapper.sh
+bsub -J collate_results -n 4 -q normal -R "select[mem>16000] rusage[mem=16000] span[hosts=1]" -M16000 snakemake -s 3.collate_finemapping_results.Snakefile --cores 4
 
-# Execute workflow (on Sanger farm)
-bsub < bsub_wrapper.sh
 ```
+
+### Methods
+
+#### Overview
+
+![workflow-overview](overview_figure.png)

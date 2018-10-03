@@ -1,3 +1,6 @@
+channels:
+- bioconda
+- conda-forge
 dependencies:
 - python=3
 - pandas
@@ -5,3 +8,4 @@ dependencies:
 - numpy
 - seaborn
 - matplotlib
+- snakemake
