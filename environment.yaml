@@ -1,11 +1,10 @@
 channels:
-- bioconda
 - conda-forge
 dependencies:
 - python=3
-- pandas
+- dask
+- gcsfs
+- fastparquet
+- pyyaml
 - scipy
 - numpy
-- seaborn
-- matplotlib
-- snakemake

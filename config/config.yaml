@@ -1,0 +1,17 @@
+# Sumstat config
+assembly: 'b37' # Which build to run analysis in
+exclude_MHC: 'b37' # Whether to exclude the MHC from analyses ['b37'|'b38']
+min_cases: 100 # Minimum number of cases
+min_maf:   0.01  # Min minor allele freq
+
+# Distance based clumping
+clump_dist: 500  # Distance (kb) either side of index to clump by
+clump_pval: 5e-8 # Maximum p-value for clumping output
+
+# GCTA cojo select parameters
+cojo_colin: 0.9   # Don't include SNPs that are colinear with an already selected SNP
+cojo_wind:  500   # (Kb) Assume SNPs outside window are in linkage equilibrium
+cojo_p:     5e-8  # P-value for declaring signficant
+
+# Finemapping parameters
+fm_wind: 500   # (Kb) Window around the index on which to perform credible set analysis
