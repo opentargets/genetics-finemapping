@@ -72,7 +72,24 @@ def run_credible_set_for_locus(
     # Add index variant as a column
     cred_sets.loc[:, 'index_variant_id'] = index_info['variant_id']
 
+    # Add column specifying method used
+    cred_sets.loc[:, 'multisignal_method'] = method
+
+    # Format output table
+    cred_sets = format_credset_output(cred_sets)
+
     return cred_sets
+
+def format_credset_output(cred_sets):
+    ''' Formats the cred_sets table for output
+    Args:
+        cred_sets (pd.df)
+    Returns:
+        pd.df
+    '''
+    cols = finemapping.utils.get_credset_out_columns()
+    meta = finemapping.utils.get_meta_info(type='cred_set')
+    return cred_sets.loc[:, cols.keys()].rename(columns=cols)
 
 def calc_credible_sets(data):
     ''' Calculates credible sets from provided sumstats
@@ -107,13 +124,15 @@ def calc_credible_sets(data):
     data["postprob_cumsum"] = data["postprob"].cumsum()
 
     # Find 99% and 95% credible sets - this is horrible
-    set_idx = data["postprob_cumsum"].gt(0.99).tolist().index(True)
-    data["is99_credset"] = [1] * (set_idx + 1) + [0] * (data.shape[0] - (set_idx + 1))
     set_idx = data["postprob_cumsum"].gt(0.95).tolist().index(True)
     data["is95_credset"] = [1] * (set_idx + 1) + [0] * (data.shape[0] - (set_idx + 1))
+    data["is95_credset"] = data["is95_credset"].map({1:True, 0:False})
+    set_idx = data["postprob_cumsum"].gt(0.99).tolist().index(True)
+    data["is99_credset"] = [1] * (set_idx + 1) + [0] * (data.shape[0] - (set_idx + 1))
+    data["is99_credset"] = data["is99_credset"].map({1:True, 0:False})
 
     # Only keep rows that are in the 95 or 99% credible sets
-    to_keep = ((data["is95_credset"] == 1) | (data["is99_credset"] == 1))
+    to_keep = (data["is95_credset"] | data["is99_credset"])
     cred_set_res = data.loc[to_keep, :]
 
     return cred_set_res

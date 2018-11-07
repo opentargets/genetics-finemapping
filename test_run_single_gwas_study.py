@@ -18,17 +18,15 @@ def main():
     # os.makedirs(tmp_dir, exist_ok=True)
 
     # Run example
-    finemapping.ot_pipeline.run_single_study(
+    top_loci, credsets = finemapping.ot_pipeline.run_single_study(
         in_pq='input/gwas/NEALEUKB_50',
         in_plink='input/ld/EUR.{chrom}.1000Gp3.20130502',
         study_id='NEALEUKB_50',
-        config_file='config/config.yaml',
+        analysis_config_file='configs/analysis.config.yaml',
         chrom='22',
         tmp_dir=tmp_dir,
-        # method='distance'
         method='conditional'
         )
-
 
     return 0
 

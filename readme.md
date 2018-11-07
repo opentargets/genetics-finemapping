@@ -17,6 +17,10 @@ source activate finemapping2
 # Alter configuration file
 nano configs/config.yaml
 
-# Execute
-
 ```
+
+# TODO
+- Add logging
+- Only load required fields from parquet files
+- Add build 37 variant ID and position columns to sumstat files
+- Add eaf_estimated column to the sumstat files and select this as eaf when loading the data

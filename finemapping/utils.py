@@ -7,6 +7,7 @@
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
+from collections import OrderedDict
 
 def load_sumstats(in_pq, study_id, cell_id=None, gene_id=None,
                   group_id=None, chrom=None, excl_mhc=None, min_maf=None,
@@ -115,6 +116,110 @@ def extract_window(sumstats, chrom, pos, window):
 
     return sumstat_wind
 
+def get_credset_out_columns():
+    ''' Returns an OrderedDict to map credible set output columns.
+        Useful for creating an empty credset df.
+    Returns:
+        OrderedDict
+    '''
+    return OrderedDict([
+        ('study_id', 'study_id'),
+        ('cell_id', 'cell_id'),
+        ('gene_id', 'gene_id'),
+        ('group_id', 'group_id'),
+        ('trait_id', 'trait_id'),
+        ('index_variant_id', 'variant_id_index'),
+        ('variant_id', 'variant_id_tag'),
+        ('pos', 'pos_tag'),
+        ('chrom', 'chrom_tag'),
+        ('ref_al', 'ref_al_tag'),
+        ('alt_al', 'alt_al_tag'),
+        ('beta', 'beta_tag'),
+        ('se', 'se_tag'),
+        ('pval', 'pval_tag'),
+        ('beta_cond', 'beta_cond_tag'),
+        ('se_cond', 'se_cond_tag'),
+        ('pval_cond', 'pval_cond_tag'),
+        ('logABF', 'logABF'),
+        ('postprob', 'postprob'),
+        ('postprob_cumsum', 'postprob_cumsum'),
+        ('is95_credset', 'is95_credset'),
+        ('is99_credset', 'is99_credset'),
+        ('multisignal_method', 'multisignal_method')
+    ])
+
+def get_toploci_out_columns():
+    ''' Returns an OrderedDict to map top loci set output columns.
+        Useful for creating an empty credset df.
+    Returns:
+        OrderedDict
+    '''
+    return OrderedDict([
+        ('study_id', 'study_id'),
+        ('cell_id', 'cell_id'),
+        ('gene_id', 'gene_id'),
+        ('group_id', 'group_id'),
+        ('trait_id', 'trait_id'),
+        ('variant_id', 'variant_id'),
+        ('chrom', 'chrom'),
+        ('pos', 'pos'),
+        ('ref_al', 'ref_al'),
+        ('alt_al', 'alt_al'),
+        ('beta', 'beta'),
+        ('se', 'se'),
+        ('pval', 'pval'),
+        ('clump_method', 'clump_method')
+    ])
+
+def get_meta_info(type):
+    ''' Returns a dict of meta data for dask
+    Args:
+        type [top_loci|cred_set]
+    '''
+    if type == 'top_loci':
+        meta = {
+            'study_id': 'object',
+            'cell_id': 'object',
+            'gene_id': 'object',
+            'group_id': 'object',
+            'trait_id': 'object',
+            'variant_id': 'object',
+            'chrom': 'category',
+            'pos': 'int64',
+            'ref_al': 'object',
+            'alt_al': 'object',
+            'beta': 'float64',
+            'se': 'float64',
+            'pval': 'float64',
+            'clump_method': 'object'
+        }
+    elif type == 'cred_set':
+        meta = {
+            'study_id': 'object',
+            'cell_id': 'object',
+            'gene_id': 'object',
+            'group_id': 'object',
+            'trait_id': 'object',
+            'variant_id_index': 'object',
+            'variant_id_tag': 'object',
+            'pos_tag': 'int64',
+            'chrom_tag': 'category',
+            'ref_al_tag': 'object',
+            'alt_al_tag': 'object',
+            'beta_tag': 'float64',
+            'se_tag': 'float64',
+            'pval_tag': 'float64',
+            'beta_cond_tag': 'float64',
+            'se_cond_tag': 'float64',
+            'pval_cond_tag': 'float64',
+            'logABF': 'float64',
+            'postprob': 'float64',
+            'postprob_cumsum': 'float64',
+            'is95_credset': 'bool',
+            'is99_credset': 'bool',
+            'multisignal_method': 'object'
+        }
+    return meta
 
 # def load_manifest(in_data):
 #     ''' Loads a dataframe containing information about partitions on which to

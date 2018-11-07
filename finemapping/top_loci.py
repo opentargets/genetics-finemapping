@@ -7,6 +7,7 @@
 import finemapping.gcta
 import os
 import pandas as pd
+from collections import OrderedDict
 
 def detect_top_loci(sumstats, in_plink, temp_dir,
         method='conditional',
@@ -24,9 +25,12 @@ def detect_top_loci(sumstats, in_plink, temp_dir,
 
     temp_dir = os.path.join(temp_dir, 'top_loci')
 
+    # Skip if clumping there are no variants with pval < p_threshold
+    if (sumstats['pval'] <= cojo_p).sum() == 0:
+        # Use empty sumstats df
+        top_loci = sumstats.head(0)
     # Detect top loci using GCTA-cojo
-    if method == 'conditional':
-
+    elif method == 'conditional':
         # Use GCTA-cojo to perform conditional analysis
         top_loci = finemapping.gcta.get_conditional_top_loci(
             sumstats,
@@ -37,24 +41,38 @@ def detect_top_loci(sumstats, in_plink, temp_dir,
             cojo_window=cojo_window,
             cojo_collinear=cojo_collinear
         )
-
     # Cluster using distance based clumping
     elif method == 'distance':
-
         top_loci = get_distance_top_loci(
             sumstats,
             clump_dist=clump_dist,
             clump_p=clump_p
         )
-
     # Raise error if conditional or distance is not selected
     else:
         raise ArgumentError('Method must be one of [conditional|distance]')
 
     # Add column specifying method used
-    top_loci.loc[:, 'clump_method'] = method
+    top_loci['clump_method'] = method
+
+    # Format output table
+    top_loci = format_top_loci_output(top_loci)
 
     return top_loci
+
+def format_top_loci_output(top_loci):
+    ''' Formats the top_loci table for output
+    Args:
+        top_loci (pd.df)
+    Returns:
+        pd.df
+    '''
+    cols = finemapping.utils.get_toploci_out_columns()
+    meta = finemapping.utils.get_meta_info(type='top_loci')
+    return top_loci.loc[:, cols.keys()] \
+                   .rename(columns=cols) \
+                   .astype(dtype=meta)
+
 
 def get_distance_top_loci(sumstats, clump_dist=500, clump_p=5e-8):
     ''' Clump top loci based on distance.
