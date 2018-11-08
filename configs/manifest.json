@@ -1,0 +1,32 @@
+[
+  {
+    "type": "gwas",
+    "method": "conditional",
+    "cell_id": null,
+    "group_id": null,
+    "gene_id": null,
+    "study_id": "NEALEUKB_50",
+    "ld_ref": "input/ld/EUR.{chrom}.1000Gp3.20130502",
+    "chrom": "22"
+  },
+  {
+    "type": "gwas",
+    "method": "conditional",
+    "cell_id": null,
+    "group_id": null,
+    "gene_id": null,
+    "study_id": "NEALEUKB_50",
+    "ld_ref": "input/ld/EUR.{chrom}.1000Gp3.20130502",
+    "chrom": "21"
+  },
+  {
+    "type": "molecular_qtl",
+    "method": "conditional",
+    "cell_id": "UBERON_0000178",
+    "group_id": null,
+    "gene_id": "ENSG00000000460",
+    "study_id": "GTEX7",
+    "ld_ref": "input/ld/EUR.{chrom}.1000Gp3.20130502",
+    "chrom": "1"
+  }
+]

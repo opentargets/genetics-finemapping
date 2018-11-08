@@ -28,42 +28,48 @@ def main():
     df['group_id'] = ''
     df['trait_id'] = 'UKB_50'
 
+    # Set types
+    df = df.astype(dtype={'chrom':'object'})
+    print(df.info())
+
     # Save as parquet
     os.makedirs('gwas', exist_ok=True)
     out_path = 'gwas/NEALEUKB_50'
     dd.to_parquet(df, path=out_path,
                   partition_on=['chrom'],
-                  engine='fastparquet')
+                  engine='fastparquet',
+                  object_encoding='utf8')
 
     #
     # Process an example GTEX tissue
     #
 
-    # print('Making example GTEX...')
-    #
-    # # Download GTEX whole blood (UBERON_0000178)
-    # url = 'gs://genetics-portal-sumstats/molecular_qtl/eqtl/GTEX7/UBERON_0000178/*/*.tsv.gz'
-    # dfs = []
-    # for inf in glob_gcs(url, head=50):
-    #     # Get information about file
-    #     _, study_id, cell_id, gene_id = os.path.split(inf)[-1].replace('.tsv.gz', '').split('-')
-    #     # Load dataset
-    #     df = dd.read_table(inf, sep='\t', compression='gzip', blocksize=None)
-    #     df['study_id'] = study_id
-    #     df['cell_id'] = cell_id
-    #     df['gene_id'] = gene_id
-    #     df['group_id'] = ''
-    #     df['trait_id'] = 'eqtl'
-    #     dfs.append(df.compute())
-    # # Merge
-    # merged = pd.concat(dfs)
-    # merged.chrom = merged.chrom.astype(str)
-    # # Save as parquet
-    # os.makedirs('molecular_qtl', exist_ok=True)
-    # out_path = 'molecular_qtl/GTEX7'
-    # dd.to_parquet(dd.from_pandas(merged, npartitions=1), path=out_path,
-    #               partition_on=['cell_id', 'gene_id', 'trait_id', 'chrom'],
-    #               engine='fastparquet')
+    print('Making example GTEX...')
+
+    # Download GTEX whole blood (UBERON_0000178)
+    url = 'gs://genetics-portal-sumstats/molecular_qtl/eqtl/GTEX7/UBERON_0000178/*/*.tsv.gz'
+    dfs = []
+    for inf in glob_gcs(url, head=50):
+        # Get information about file
+        _, study_id, cell_id, gene_id = os.path.split(inf)[-1].replace('.tsv.gz', '').split('-')
+        # Load dataset
+        df = dd.read_table(inf, sep='\t', compression='gzip', blocksize=None)
+        df['study_id'] = study_id
+        df['cell_id'] = cell_id
+        df['gene_id'] = gene_id
+        df['group_id'] = ''
+        df['trait_id'] = 'eqtl'
+        dfs.append(df.compute())
+    # Merge
+    merged = pd.concat(dfs)
+    merged = merged.astype(dtype={'chrom':'object'})
+    # Save as parquet
+    os.makedirs('molecular_qtl', exist_ok=True)
+    out_path = 'molecular_qtl/GTEX7'
+    dd.to_parquet(dd.from_pandas(merged, npartitions=1), path=out_path,
+                  partition_on=['cell_id', 'gene_id', 'trait_id', 'chrom'],
+                  engine='fastparquet',
+                  object_encoding='utf8')
 
     return 0
 

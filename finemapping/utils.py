@@ -48,6 +48,7 @@ def load_sumstats(in_pq, study_id, cell_id=None, gene_id=None,
 
     # Conversion to in-memory pandas
     df = df.compute()
+    df = df.astype(dtype=get_meta_info(type='sumstats'))
 
     #
     # Extract fields
@@ -174,7 +175,7 @@ def get_toploci_out_columns():
 def get_meta_info(type):
     ''' Returns a dict of meta data for dask
     Args:
-        type [top_loci|cred_set]
+        type [top_loci|cred_set|sumstats]
     '''
     if type == 'top_loci':
         meta = {
@@ -184,7 +185,8 @@ def get_meta_info(type):
             'group_id': 'object',
             'trait_id': 'object',
             'variant_id': 'object',
-            'chrom': 'category',
+            # 'chrom': 'category',
+            'chrom': 'object',
             'pos': 'int64',
             'ref_al': 'object',
             'alt_al': 'object',
@@ -203,7 +205,8 @@ def get_meta_info(type):
             'variant_id_index': 'object',
             'variant_id_tag': 'object',
             'pos_tag': 'int64',
-            'chrom_tag': 'category',
+            # 'chrom_tag': 'category',
+            'chrom_tag': 'object',
             'ref_al_tag': 'object',
             'alt_al_tag': 'object',
             'beta_tag': 'float64',
@@ -218,6 +221,30 @@ def get_meta_info(type):
             'is95_credset': 'bool',
             'is99_credset': 'bool',
             'multisignal_method': 'object'
+        }
+    elif type == 'sumstats':
+        meta = {
+            'variant_id_b37': 'object',
+            'pos_b37': 'int64',
+            'ref_al': 'object',
+            'alt_al': 'object',
+            'beta': 'float64',
+            'se': 'float64',
+            'pval': 'float64',
+            'n_samples_variant_level': 'float64',
+            'n_samples_study_level': 'float64',
+            'n_cases_variant_level': 'float64',
+            'n_cases_study_level': 'float64',
+            'eaf': 'float64',
+            'maf': 'float64',
+            'info': 'float64',
+            'is_cc': 'bool',
+            'study_id': 'object',
+            'group_id': 'object',
+            'cell_id': 'object',
+            'gene_id': 'object',
+            'trait_id': 'object',
+            'chrom': 'object'
         }
     return meta
 

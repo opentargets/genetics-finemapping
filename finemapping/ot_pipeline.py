@@ -36,6 +36,10 @@ def run_all_studies(gwas_sumstats_dir, mol_sumstats_dir, manifest_file,
         n_cores (int): number of cores to use
     '''
 
+    #
+    # Setup
+    #
+
     # Set scheduler params
     client = Client(n_workers=n_cores)
 
@@ -45,6 +49,10 @@ def run_all_studies(gwas_sumstats_dir, mol_sumstats_dir, manifest_file,
     # DEBUG
     print('Manifest: ', end='')
     pprint(manifest)
+
+    #
+    # Run the pipeline
+    #
 
     # Create delayed function
     run_single_study_delayed = dask.delayed(run_single_study, nout=2)
@@ -91,12 +99,41 @@ def run_all_studies(gwas_sumstats_dir, mol_sumstats_dir, manifest_file,
         cred_set_results_list,
         meta=finemapping.utils.get_meta_info(type='cred_set'))
 
+    #
+    # Write results
+    #
 
-    dask.compute(top_loci_dd, cred_set_dd)
-    # top_loci_dd.compute()
-    # cred_set_dd.compute()
+    # Make output folder
+    if is_local(results_dir):
+        os.makedirs(results_dir, exist_ok=True)
+
+    # Write. Need to return delayed objects and wrap inside dask.compute
+    # otherwise each will be computed twice.
+    # Also, required to use pyarrow, fastparquet is giving an error.
+    dask.compute(
+        dask.dataframe.to_parquet(
+            df=top_loci_dd,
+            path=os.path.join(results_dir, 'top_loci'),
+            engine='pyarrow',
+            compression='snappy',
+            compute=False),
+        dask.dataframe.to_parquet(
+            df=cred_set_dd,
+            path=os.path.join(results_dir, 'cred_set'),
+            engine='pyarrow',
+            compression='snappy',
+            compute=False)
+    )
 
     return 0
+
+
+def is_local(path):
+    ''' Checks if a path is local '''
+    if '://' in path:
+        return False
+    else:
+        return True
 
 def run_single_study(in_pq,
                      in_plink,
@@ -149,8 +186,8 @@ def run_single_study(in_pq,
     )
 
     # DEBUG only run for top loci
-    print('Warning: Only running for subset of loci')
-    top_loci = top_loci.head(3)
+    # print('Warning: Only running for subset of loci')
+    # top_loci = top_loci.head(3)
 
     # Perform credible set analysis on each detected locus
     credset_res_list = []
