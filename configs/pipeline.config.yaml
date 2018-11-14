@@ -8,8 +8,9 @@ results_dir: output
 temp_dir: tmp
 
 # Configure whether completed studies should be skiped
-skip_completed: True
-skipped_results: '' # Location of output that contains results to skip
+skip_existing: True
+# skip_existing: False
+existing_results_dir: 'output_completed' # Location of output that contains results to skip
 
 # Parallel
 n_cores: 3

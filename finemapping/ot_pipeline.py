@@ -16,10 +16,12 @@ import dask
 from dask.distributed import Client
 from dask.distributed import Client
 import os
+import sys # DEBUG
+import datetime
 
 def run_all_studies(gwas_sumstats_dir, mol_sumstats_dir, manifest_file,
-        results_dir, analysis_config_file, temp_dir, skip_completed,
-        skipped_results, n_cores=1):
+        results_dir, analysis_config_file, temp_dir, skip_existing,
+        existing_results_dir, n_cores=1):
     ''' Run the fine-mapping pipeline on all studies in the manifest file.
         Optionally, skips studies that already have results.
     Args:
@@ -46,9 +48,42 @@ def run_all_studies(gwas_sumstats_dir, mol_sumstats_dir, manifest_file,
     # Load the manifest
     with open(manifest_file, 'r') as in_h:
         manifest = json.load(in_h)
+
     # DEBUG
-    print('Manifest: ', end='')
+    print('Input manifest: ', end='')
     pprint(manifest)
+
+    # TEMP solution, output directory must be local
+    assert finemapping.utils.is_local(results_dir)
+
+    #
+    # Conpare input manifest to existing results if skip_existing==True
+    #
+
+    if skip_existing is True:
+
+        print('Skipping existing...')
+
+        # Load existing results files
+        existing_top_loci = dask.dataframe.read_parquet(
+            os.path.join(existing_results_dir, 'top_loci.parquet'),
+            engine='fastparquet').compute()
+        existing_cred_set = dask.dataframe.read_parquet(
+            os.path.join(existing_results_dir, 'credible_sets.parquet'),
+            engine='fastparquet').compute()
+
+        # Load existing
+        existing_manifest_file = os.path.join(
+            existing_results_dir, 'manifest.completed.json')
+        with open(existing_manifest_file, 'r') as in_h:
+            existing_manifest = json.load(in_h)
+
+        # Compare manifest to existing files
+        manifest = compare_existing_with_manifest(manifest, existing_manifest)
+
+
+    # TEMP solution. Check that there is at least 1 study to run.
+    assert len(manifest) >= 1
 
     #
     # Run the pipeline
@@ -57,7 +92,7 @@ def run_all_studies(gwas_sumstats_dir, mol_sumstats_dir, manifest_file,
     # Create delayed function
     run_single_study_delayed = dask.delayed(run_single_study, nout=2)
 
-    # Initiate delayed results lists
+    # Initiate empty results lists
     top_loci_results_list = []
     cred_set_results_list = []
 
@@ -79,13 +114,12 @@ def run_all_studies(gwas_sumstats_dir, mol_sumstats_dir, manifest_file,
             in_plink=study_info['ld_ref'],
             study_id=study_info['study_id'],
             cell_id=study_info['cell_id'],
-            gene_id=study_info['gene_id'],
             group_id=study_info['group_id'],
+            trait_id=study_info['trait_id'],
             chrom=study_info['chrom'],
             analysis_config_file=analysis_config_file,
             tmp_dir=tmp_dir,
-            method=study_info['method']
-        )
+            method=study_info['method'] )
 
         # Add results to lists
         top_loci_results_list.append(top_loci)
@@ -99,48 +133,90 @@ def run_all_studies(gwas_sumstats_dir, mol_sumstats_dir, manifest_file,
         cred_set_results_list,
         meta=finemapping.utils.get_meta_info(type='cred_set'))
 
+    # Compute the results. Brings everything into memory on single machine.
+    top_loci_df, cred_set_df = dask.compute(top_loci_dd, cred_set_dd)
+
+    # Concatenate existing results to new results
+    if skip_existing is True:
+        top_loci_df = pd.concat([top_loci_df, existing_top_loci],
+                                ignore_index=True)
+        cred_set_df = pd.concat([cred_set_df, existing_cred_set],
+                                ignore_index=True)
+
     #
     # Write results
     #
 
     # Make output folder
-    if is_local(results_dir):
-        os.makedirs(results_dir, exist_ok=True)
+    os.makedirs(results_dir, exist_ok=True)
 
-    # Write. Need to return delayed objects and wrap inside dask.compute
-    # otherwise each will be computed twice.
-    # Also, required to use pyarrow, fastparquet is giving an error.
-    dask.compute(
-        dask.dataframe.to_parquet(
-            df=top_loci_dd,
-            path=os.path.join(results_dir, 'top_loci'),
-            engine='pyarrow',
-            compression='snappy',
-            compute=False),
-        dask.dataframe.to_parquet(
-            df=cred_set_dd,
-            path=os.path.join(results_dir, 'cred_set'),
-            engine='pyarrow',
-            compression='snappy',
-            compute=False)
+    # Write
+    top_loci_df.to_parquet(
+        fname=os.path.join(results_dir, 'top_loci.parquet'),
+        engine='fastparquet',
+        compression='snappy'
     )
+    cred_set_df.to_parquet(
+        fname=os.path.join(results_dir, 'credible_sets.parquet'),
+        engine='fastparquet',
+        compression='snappy'
+    )
+
+    #
+    # Write completed manifest
+    #
+
+    # Add todays date to manifest records
+    dt = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    for record in manifest:
+        record['completed_date'] = dt
+
+    # Merge existing with current manifest
+    if skip_existing is True:
+        manifest = manifest + existing_manifest
+
+    # Write manifest
+    out_manifest_file = os.path.join(
+        results_dir, 'manifest.completed.json')
+    with open(out_manifest_file, 'w') as out_h:
+        json.dump(manifest, out_h, indent=2)
 
     return 0
 
+def compare_existing_with_manifest(manifest, existing_manifest):
+    ''' Removes existing records from the manifest
+    Args:
+        manifest (list of dicts)
+        existing_manifest (list of dicts)
+    Returns:
+        manifest with existing studies removed (list of dicts)
+    '''
 
-def is_local(path):
-    ''' Checks if a path is local '''
-    if '://' in path:
-        return False
-    else:
-        return True
+    # Make set of existing keys
+    existing_keys = set(
+        [make_manifest_record_key(record) for record in existing_manifest]
+    )
+
+    # Make list of non-existing records
+    novel_manifest = []
+    for record in manifest:
+        if make_manifest_record_key(record) not in existing_keys:
+            novel_manifest.append(record)
+
+    return novel_manifest
+
+def make_manifest_record_key(record):
+    ''' Given a single record from the manifest, return unique key
+    '''
+    fields = ['study_id', 'trait_id', 'cell_id', 'group_id', 'chrom']
+    return '-'.join([record[field] if record[field] else '' for field in fields])
 
 def run_single_study(in_pq,
                      in_plink,
                      study_id,
                      cell_id=None,
-                     gene_id=None,
                      group_id=None,
+                     trait_id=None,
                      chrom=None,
                      analysis_config_file=None,
                      tmp_dir=tempfile.gettempdir(),
@@ -150,7 +226,7 @@ def run_single_study(in_pq,
 
     pd.options.mode.chained_assignment = None # Silence pandas warning
 
-    # TEMP it is reqired that chrom is not None
+    # TEMP solution (it is reqired that chrom is not None)
     assert chrom is not None
 
     # Load analysis config file
@@ -163,8 +239,8 @@ def run_single_study(in_pq,
         in_pq,
         study_id,
         cell_id=cell_id,
-        gene_id=gene_id,
         group_id=group_id,
+        trait_id=trait_id,
         chrom=chrom,
         min_maf=analysis_config['min_maf'],
         excl_mhc=analysis_config.get('exclude_MHC', None),
@@ -186,8 +262,8 @@ def run_single_study(in_pq,
     )
 
     # DEBUG only run for top loci
-    # print('Warning: Only running for subset of loci')
-    # top_loci = top_loci.head(3)
+    print('Warning: Only running for subset of loci')
+    top_loci = top_loci.head(3)
 
     # Perform credible set analysis on each detected locus
     credset_res_list = []
@@ -208,6 +284,7 @@ def run_single_study(in_pq,
     # Concat credible sets together if they exist
     if len(credset_res_list) > 0:
         credset_results = pd.concat(credset_res_list)
+
     # Otherwise create an empty df with matching meta data
     else:
         cols = finemapping.utils.get_credset_out_columns().values()

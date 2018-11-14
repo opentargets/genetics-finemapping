@@ -73,7 +73,6 @@ def format_top_loci_output(top_loci):
                    .rename(columns=cols) \
                    .astype(dtype=meta)
 
-
 def get_distance_top_loci(sumstats, clump_dist=500, clump_p=5e-8):
     ''' Clump top loci based on distance.
     Args:

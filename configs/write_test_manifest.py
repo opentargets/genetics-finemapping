@@ -15,6 +15,7 @@ def main():
             'cell_id': None,
             'group_id': None,
             'gene_id': None,
+            'trait_id': 'UKB_50',
             'chrom': '22',
             'method': 'conditional',
             'ld_ref': 'input/ld/EUR.{chrom}.1000Gp3.20130502'
@@ -25,6 +26,7 @@ def main():
             'cell_id': None,
             'group_id': None,
             'gene_id': None,
+            'trait_id': 'UKB_50',
             'chrom': '21',
             'method': 'conditional',
             'ld_ref': 'input/ld/EUR.{chrom}.1000Gp3.20130502'
@@ -33,8 +35,9 @@ def main():
             'type': 'molecular_qtl',
             'study_id': 'GTEX7',
             'cell_id': 'UBERON_0000178',
-            'group_id': None,
+            'group_id': 'ENSG00000000460',
             'gene_id': 'ENSG00000000460',
+            'trait_id': 'eqtl',
             'chrom': '1',
             'method': 'conditional',
             'ld_ref': 'input/ld/EUR.{chrom}.1000Gp3.20130502'

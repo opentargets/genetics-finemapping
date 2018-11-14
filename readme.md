@@ -22,5 +22,7 @@ nano configs/config.yaml
 # TODO
 - Add logging
 - Only load required fields from parquet files
+- When loading, apply row filters in additions to row-group filters
 - Add build 37 variant ID and position columns to sumstat files
-- Add eaf_estimated column to the sumstat files and select this as eaf when loading the data
+- Add eaf_estimated column to the sumstat files and select this as eaf when loading the data (currently using MAF for molecular_qtl which is incorrect)
+- Add trait_id and group_id as unique identifier of study

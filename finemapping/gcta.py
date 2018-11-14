@@ -185,6 +185,6 @@ def make_file_name_prefix(row):
     Return:
         str
     '''
-    cols = ['study_id', 'cell_id', 'gene_id', 'trait_id', 'chrom']
+    cols = ['study_id', 'cell_id', 'group_id', 'trait_id', 'chrom']
     pref = '_'.join([str(x) for x in row[cols].values[0]])
     return pref

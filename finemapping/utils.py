@@ -9,9 +9,8 @@ import numpy as np
 import pandas as pd
 from collections import OrderedDict
 
-def load_sumstats(in_pq, study_id, cell_id=None, gene_id=None,
-                  group_id=None, chrom=None, excl_mhc=None, min_maf=None,
-                  build='b37'):
+def load_sumstats(in_pq, study_id, cell_id=None, group_id=None, trait_id=None,
+                  chrom=None, excl_mhc=None, min_maf=None, build='b37'):
     ''' Loads summary statistics from Open Targets parquet format:
         - Loads only required rows
         - Converts to pandas
@@ -27,28 +26,34 @@ def load_sumstats(in_pq, study_id, cell_id=None, gene_id=None,
     # Load
     #
 
-    # Create row filters
-    row_filters = [('study_id', '==', study_id)]
+    # Create row-group filters
+    row_grp_filters = [('study_id', '==', study_id)]
     if cell_id:
-        row_filters.append(('cell_id', '==', cell_id))
-    if gene_id:
-        row_filters.append(('gene_id', '==', gene_id))
+        row_grp_filters.append(('cell_id', '==', cell_id))
     if group_id:
-        row_filters.append(('group_id', '==', group_id))
+        row_grp_filters.append(('group_id', '==', group_id))
+    if trait_id:
+        row_grp_filters.append(('trait_id', '==', trait_id))
     if chrom:
-        row_filters.append(('chrom', '==', str(chrom)))
+        row_grp_filters.append(('chrom', '==', str(chrom)))
 
     # Create column filters
     # TODO
 
     # Read file
     df = dd.read_parquet(in_pq,
-                         filters=row_filters,
+                         filters=row_grp_filters,
                          engine='fastparquet')
 
     # Conversion to in-memory pandas
     df = df.compute()
     df = df.astype(dtype=get_meta_info(type='sumstats'))
+
+    # Apply row filters
+    query = ' & '.join(
+        ['{} {} "{}"'.format(filter[0], filter[1], filter[2])
+         for filter in row_grp_filters] )
+    df = df.query(query)
 
     #
     # Extract fields
@@ -62,6 +67,13 @@ def load_sumstats(in_pq, study_id, cell_id=None, gene_id=None,
     df['n_cases'] = np.where(pd.isnull(df['n_cases_variant_level']),
                              df['n_cases_study_level'],
                              df['n_cases_variant_level'])
+
+    # Extract EAF. TODO this needs to be changed to use estimated EAF if EAF_est
+    if pd.isnull(df['eaf']).any():
+        print('Warning: using MAF instead of EAF')
+    df['eaf'] = np.where(pd.isnull(df['eaf']),
+                             df['maf'],
+                             df['eaf'])
 
     # Extract required build
     df['variant_id'] = df['variant_id_{0}'.format(build)]
@@ -89,6 +101,7 @@ def load_sumstats(in_pq, study_id, cell_id=None, gene_id=None,
                        (df['pos_b38'] >= 28510120) &
                        (df['pos_b38'] <= 33480577) )
             df = df.loc[~is_mhc, :]
+
     return df
 
 def eaf_to_maf(eaf):
@@ -247,6 +260,13 @@ def get_meta_info(type):
             'chrom': 'object'
         }
     return meta
+
+def is_local(path):
+    ''' Checks if a path is local '''
+    if '://' in path:
+        return False
+    else:
+        return True
 
 # def load_manifest(in_data):
 #     ''' Loads a dataframe containing information about partitions on which to
