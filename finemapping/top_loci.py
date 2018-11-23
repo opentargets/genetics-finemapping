@@ -4,7 +4,8 @@
 # Ed Mountjoy
 #
 
-import finemapping.gcta
+import gcta as fm_gcta
+import utils as fm_utils
 import os
 import pandas as pd
 from collections import OrderedDict
@@ -16,7 +17,8 @@ def detect_top_loci(sumstats, in_plink, temp_dir,
         cojo_window=500,
         cojo_collinear=0.9,
         clump_dist=500,
-        clump_p=5e-8):
+        clump_p=5e-8,
+        logger=None):
     ''' Find top loci for a given study
     Args:
         TODO
@@ -25,24 +27,38 @@ def detect_top_loci(sumstats, in_plink, temp_dir,
 
     temp_dir = os.path.join(temp_dir, 'top_loci')
 
+    # Calculate how many variants below p threshold there are
+    rows_below_threshold = (sumstats['pval'] <= cojo_p).sum()
+    if logger:
+        logger.info('{0} variants with p < {1}'.format(
+            rows_below_threshold, cojo_p
+        ))
+
     # Skip if clumping there are no variants with pval < p_threshold
-    if (sumstats['pval'] <= cojo_p).sum() == 0:
+    if rows_below_threshold == 0:
+        if logger:
+            logger.info('No variants with pval < p_threshold, skipping clumping...')
         # Use empty sumstats df
         top_loci = sumstats.head(0)
     # Detect top loci using GCTA-cojo
     elif method == 'conditional':
+        if logger:
+            logger.info('Clumping using GCTA-cojo...')
         # Use GCTA-cojo to perform conditional analysis
-        top_loci = finemapping.gcta.get_conditional_top_loci(
+        top_loci = fm_gcta.get_conditional_top_loci(
             sumstats,
             in_plink,
             temp_dir,
             maf=maf,
             cojo_p=cojo_p,
             cojo_window=cojo_window,
-            cojo_collinear=cojo_collinear
+            cojo_collinear=cojo_collinear,
+            logger=logger
         )
     # Cluster using distance based clumping
     elif method == 'distance':
+        if logger:
+            logger.info('Clumping by distance...')
         top_loci = get_distance_top_loci(
             sumstats,
             clump_dist=clump_dist,
@@ -50,6 +66,8 @@ def detect_top_loci(sumstats, in_plink, temp_dir,
         )
     # Raise error if conditional or distance is not selected
     else:
+        if logger:
+            logger.error('Method must be one of [conditional|distance]')
         raise ArgumentError('Method must be one of [conditional|distance]')
 
     # Add column specifying method used
@@ -67,8 +85,8 @@ def format_top_loci_output(top_loci):
     Returns:
         pd.df
     '''
-    cols = finemapping.utils.get_toploci_out_columns()
-    meta = finemapping.utils.get_meta_info(type='top_loci')
+    cols = fm_utils.get_toploci_out_columns()
+    meta = fm_utils.get_meta_info(type='top_loci')
     return top_loci.loc[:, cols.keys()] \
                    .rename(columns=cols) \
                    .astype(dtype=meta)

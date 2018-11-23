@@ -25,4 +25,7 @@ nano configs/config.yaml
 - When loading, apply row filters in additions to row-group filters
 - Add build 37 variant ID and position columns to sumstat files
 - Add eaf_estimated column to the sumstat files and select this as eaf when loading the data (currently using MAF for molecular_qtl which is incorrect)
-- Add trait_id and group_id as unique identifier of study
+- Currently fails for sex chromosomes
+  - Need to replace X with 23 in plink file or when specifying gcta command
+  - Need to impute sex in plink file for X for cojo to work
+- Only create output folders if there is anything to write

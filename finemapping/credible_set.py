@@ -4,8 +4,8 @@
 # Ed Mountjoy
 #
 
-import finemapping.utils
-import finemapping.gcta
+import utils as fm_utils
+import gcta as fm_gcta
 import os
 import numpy as np
 import pandas as pd
@@ -19,7 +19,8 @@ def run_credible_set_for_locus(
             in_plink,
             temp_dir,
             fm_wind,
-            method='conditional'):
+            method='conditional',
+            logger=None):
     ''' Run credible set analysis at a given locus (speficied by index_info)
     Args:
         index_info (dict): index locus information
@@ -29,12 +30,18 @@ def run_credible_set_for_locus(
             or extract a set distance
     '''
 
+    if logger:
+        logger.info(
+        '- Running credible set analysis for {0}'.format(index_info['variant_id']))
+
     temp_dir = os.path.join(temp_dir, 'credible_set')
 
     # Extract region surrounding the index variant
-    sumstat_wind = finemapping.utils.extract_window(
-        sumstats, index_info['chrom'], index_info['pos'], fm_wind
-    )
+    sumstat_wind = fm_utils.extract_window(
+        sumstats, index_info['chrom'], index_info['pos'], fm_wind)
+    if logger:
+        logger.info('  {0} rows in window around index variant'.format(
+        sumstat_wind.shape[0]))
 
     # Perform conditional analysis
     sumstat_cond = None
@@ -47,16 +54,24 @@ def run_credible_set_for_locus(
             top_loci.variant_id
         )
 
+        if logger:
+            logger.info('  conditioning on {0} variants'.format(
+            len(cond_list)))
+
         # Only do conditional if there are variants to condition on
         if len(cond_list) > 0:
-            sumstat_cond = finemapping.gcta.perfrom_conditional_adjustment(
+            sumstat_cond = fm_gcta.perfrom_conditional_adjustment(
                 sumstat_wind,
                 in_plink,
                 temp_dir,
                 index_info['variant_id'],
                 index_info['chrom'],
-                cond_list
+                cond_list,
+                logger=logger
             )
+    else:
+        if logger:
+            logger.info('  not conditioning as method != conditional')
 
     # If conditional analysis was not perform, we need to make the sumstat df
     # look the same, add (beta_cond, se_cond, pval_cond) columns
@@ -67,7 +82,13 @@ def run_credible_set_for_locus(
         sumstat_cond['pval_cond'] = sumstat_cond['pval']
 
     # Do credible set analysis
+    if logger:
+        logger.info('  calculating credible sets...')
     cred_sets = calc_credible_sets(sumstat_cond)
+    if logger:
+        logger.info('  found {0} in 95% and {1} in 99% cred sets'.format(
+        cred_sets.is95_credset.sum(), cred_sets.is99_credset.sum()
+        ))
 
     # Add index variant as a column
     cred_sets.loc[:, 'index_variant_id'] = index_info['variant_id']
@@ -87,8 +108,8 @@ def format_credset_output(cred_sets):
     Returns:
         pd.df
     '''
-    cols = finemapping.utils.get_credset_out_columns()
-    meta = finemapping.utils.get_meta_info(type='cred_set')
+    cols = fm_utils.get_credset_out_columns()
+    meta = fm_utils.get_meta_info(type='cred_set')
     return cred_sets.loc[:, cols.keys()].rename(columns=cols)
 
 def calc_credible_sets(data):

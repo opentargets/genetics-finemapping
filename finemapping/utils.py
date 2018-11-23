@@ -10,7 +10,8 @@ import pandas as pd
 from collections import OrderedDict
 
 def load_sumstats(in_pq, study_id, cell_id=None, group_id=None, trait_id=None,
-                  chrom=None, excl_mhc=None, min_maf=None, build='b37'):
+                  chrom=None, excl_mhc=None, min_maf=None, build='b37',
+                  logger=None):
     ''' Loads summary statistics from Open Targets parquet format:
         - Loads only required rows
         - Converts to pandas
@@ -46,7 +47,7 @@ def load_sumstats(in_pq, study_id, cell_id=None, group_id=None, trait_id=None,
                          engine='fastparquet')
 
     # Conversion to in-memory pandas
-    df = df.compute()
+    df = df.compute(scheduler='single-threaded') # DEBUG
     df = df.astype(dtype=get_meta_info(type='sumstats'))
 
     # Apply row filters
@@ -70,7 +71,8 @@ def load_sumstats(in_pq, study_id, cell_id=None, group_id=None, trait_id=None,
 
     # Extract EAF. TODO this needs to be changed to use estimated EAF if EAF_est
     if pd.isnull(df['eaf']).any():
-        print('Warning: using MAF instead of EAF')
+        if logger:
+            logger.warning('Warning: using MAF instead of EAF')
     df['eaf'] = np.where(pd.isnull(df['eaf']),
                              df['maf'],
                              df['eaf'])

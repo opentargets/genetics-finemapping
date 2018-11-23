@@ -12,7 +12,8 @@ def get_conditional_top_loci(sumstats, in_plink, temp_dir,
         maf=0.01,
         cojo_p=5e-8,
         cojo_window=500,
-        cojo_collinear=0.9
+        cojo_collinear=0.9,
+        logger=None
     ):
     ''' Uses GCTA-cojo to perform conditional analysis
     Args:
@@ -44,7 +45,12 @@ def get_conditional_top_loci(sumstats, in_plink, temp_dir,
     # Run command
     fnull = open(os.devnull, 'w')
     cp = sp.run(' '.join(cmd), shell=True, stdout=fnull, stderr=sp.STDOUT)
-    assert cp.returncode == 0
+
+    # Log error if GCTA return code is not 0
+    if cp.returncode != 0:
+        gcta_log_file = '{0}.log'.format(gcta_out)
+        gcta_error = read_error_from_gcta_log(gcta_log_file)
+        logger.error('GCTA error:\n\n{0}\n'.format(gcta_error))
 
     # Read results (if they exist)
     gcta_res = '{0}.jma.cojo'.format(gcta_out)
@@ -59,8 +65,18 @@ def get_conditional_top_loci(sumstats, in_plink, temp_dir,
 
     return top_loci
 
+def read_error_from_gcta_log(log_file):
+    ''' Reads a GCTA log file and returns lines containing the word "error"
+    '''
+    error_lines = []
+    with open(log_file, 'r') as in_h:
+        for line in in_h:
+            if 'error' in line.lower():
+                error_lines.append(line.rstrip())
+    return '\n'.join(error_lines)
+
 def perfrom_conditional_adjustment(sumstats, in_plink, temp_dir, index_var,
-        chrom, condition_on):
+        chrom, condition_on, logger=None):
     ''' Uses GCTA-cojo to perform conditional analysis
     Args:
         sumstats (pd.df)
@@ -102,7 +118,12 @@ def perfrom_conditional_adjustment(sumstats, in_plink, temp_dir, index_var,
     # Run command
     fnull = open(os.devnull, 'w')
     cp = sp.run(' '.join(cmd), shell=True, stdout=fnull, stderr=sp.STDOUT)
-    assert cp.returncode == 0
+
+    # Log error if GCTA return code is not 0
+    if cp.returncode != 0:
+        gcta_log_file = '{0}.log'.format(gcta_out)
+        gcta_error = read_error_from_gcta_log(gcta_log_file)
+        logger.error('GCTA error:\n\n{0}\n'.format(gcta_error))
 
     # Read output
     gcta_res = '{0}.cma.cojo'.format(gcta_out)
