@@ -143,6 +143,12 @@ def parse_args():
 
 
     args = p.parse_args()
+
+    # Convert "None" strings to None type
+    for arg in vars(args):
+        if getattr(args, arg) == "None":
+            setattr(args, arg, None)
+
     return args
 
 def make_logger(log_file):

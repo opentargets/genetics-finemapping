@@ -9,6 +9,8 @@ python finemapping/single_study.wrapper.py \
   --ld 'input/ld/EUR.{chrom}.1000Gp3.20130502' \
   --config_file 'configs/analysis.config.yaml' \
   --study_id 'NEALEUKB_50' \
+  --cell_id 'None' \
+  --group_id 'None' \
   --trait_id 'UKB_50' \
   --chrom '22' \
   --method 'conditional' \
@@ -17,9 +19,5 @@ python finemapping/single_study.wrapper.py \
   --tmpdir 'tmp/study_id=NEALEUKB_50/cell_id=/group_id=/trait_id=UKB_50/chrom=22/' \
   --log 'logs/study_id=NEALEUKB_50/cell_id=/group_id=/trait_id=UKB_50/chrom=22/logfile.txt'
 
-  # Not required
-  # --cell_id '' \
-  # --group_id '' \
-  # --trait_id '' \
 
 echo COMPLETE
