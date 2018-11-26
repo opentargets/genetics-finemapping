@@ -21,7 +21,8 @@ def main():
 
     manifest = []
 
-    for type in ['gwas']:#, 'molecular_qtl']:
+    # for type in ['gwas']::
+    for type in ['gwas', 'molecular_qtl']:
         # Load list of all studies
         in_path = data_pattern.format(type=type)
         studies = dd.read_parquet(
