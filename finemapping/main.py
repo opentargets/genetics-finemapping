@@ -77,10 +77,10 @@ def run_single_study(in_pq,
         'Completed top loci: {0} loci'.format(top_loci.shape[0]))
 
     # DEBUG only run for top loci
-    n_head = 3
-    if logger:
-        logger.warning('Only running for top {0} loci'.format(n_head))
-    top_loci = top_loci.head(n_head)
+    # n_head = 3
+    # if logger:
+    #     logger.warning('Only running for top {0} loci'.format(n_head))
+    # top_loci = top_loci.head(n_head)
 
     # Perform credible set analysis on each detected locus
     if logger:

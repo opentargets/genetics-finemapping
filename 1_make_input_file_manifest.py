@@ -18,20 +18,23 @@ def main():
     cols = ['study_id', 'trait_id', 'group_id', 'cell_id', 'chrom']
     valid_chrom = set([str(chrom) for chrom in range(1, 23)])
     out_manifest = 'configs/input_files.config.tsv'
+    p_threshold = 5e-8
 
     manifest = []
 
-    # for type in ['gwas']::
+    # for type in ['gwas']:
     for type in ['gwas', 'molecular_qtl']:
         # Load list of all studies
         in_path = data_pattern.format(type=type)
         studies = dd.read_parquet(
             path=in_path,
-            columns=cols,
+            columns=cols + ['pval'],
             engine='fastparquet'
         )
+        # Only keep where p < threshold
+        studies = studies[studies.pval < p_threshold]
         # Drop duplicates
-        studies = studies.drop_duplicates()
+        studies = studies[cols].drop_duplicates()
         # Convert to pandas
         studies = studies.compute()
         # Add manifest record
