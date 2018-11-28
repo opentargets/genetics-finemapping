@@ -16,17 +16,22 @@ bash setup.sh # Requires sudo log in part way through
 conda env create -n finemapping --file environment.yaml
 ```
 
+- Set `concurrent-job-limit` in `configs/cromwell.config`
+
 ### Usage
 
 ```
 # Activate environment
 source activate finemapping
 
-# Start mysql
+# Start mysql docker
 docker run -p 3306:3306 --name cromwell_myself -e MYSQL_ROOT_PASSWORD=cromwell_root_password -e MYSQL_DATABASE=cromwell_db -e MYSQL_USER=cromwell_user -e MYSQL_PASSWORD=cromwell_other_password -d mysql/mysql-server:5.5
 
-# Alter configuration file
-nano configs/config.yaml
+# Create input manifest
+python 1_make_input_file_manifest.py
+
+# Execute workflow
+bash execute_workflow.test.sh
 
 ```
 
