@@ -2,17 +2,28 @@ Finemapping
 ===========
 
 ### Requirements
-- GCTA >= v1.91.3 (there is a bug in v1.91.2b which causes GCTA slct to produce unexpected results)
-- `conda`
+- GCTA (>= v1.91.3) must be available in `$PATH`
+- [conda](https://conda.io/docs/)
+- [Cromwell](https://cromwell.readthedocs.io/en/stable/) jar accessible via `$CROMWELL_JAR`
+- git
+
+### Setup enironment
+
+```
+git clone https://github.com/opentargets/finemapping.git
+cd finemapping
+bash setup.sh # Requires sudo log in part way through
+conda env create -n finemapping --file environment.yaml
+```
 
 ### Usage
 
 ```
-# Install dependencies into isolated environment
-conda env create -n finemapping2 --file environment.yaml
-
 # Activate environment
-source activate finemapping2
+source activate finemapping
+
+# Start mysql
+docker run -p 3306:3306 --name cromwell_myself -e MYSQL_ROOT_PASSWORD=cromwell_root_password -e MYSQL_DATABASE=cromwell_db -e MYSQL_USER=cromwell_user -e MYSQL_PASSWORD=cromwell_other_password -d mysql/mysql-server:5.5
 
 # Alter configuration file
 nano configs/config.yaml

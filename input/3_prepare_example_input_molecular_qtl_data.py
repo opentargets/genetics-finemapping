@@ -114,14 +114,13 @@ def main():
     # Save as parquet
     print('Saving...')
     os.makedirs('molecular_qtl', exist_ok=True)
-    out_path = 'molecular_qtl/GTEX7_fastparquet_partitioned'
+    out_path = 'molecular_qtl/GTEX7'
     with ProgressBar():
         df.to_parquet(
             out_path,
-            # engine='pyarrow',
             engine='fastparquet',
-            compression='snappy',
-            partition_on=['group_id']
+            compression='snappy'
+            # partition_on=['group_id']
             # file_scheme='hive'
             # row_group_offsets=row_offset
         )
@@ -134,70 +133,6 @@ def main():
         index=None,
         compression='gzip'
     )
-
-
-    # dfs = []
-    # print('Getting list of files...')
-    # in_files = glob_gcs(url)
-    # # in_files = glob_gcs(url, head=500)
-    # print('Making df list...')
-    # for i, inf in enumerate(in_files):
-    #     print('Adding file {0}...'.format(i))
-    #     # Get information about file
-    #     _, study_id, cell_id, gene_id = os.path.split(inf)[-1].replace('.tsv.gz', '').split('-')
-    #     # Load dataset
-    #     df = dd.read_table(inf, sep='\t', compression='gzip', blocksize=None)
-    #     df['study_id'] = study_id
-    #     df['cell_id'] = cell_id
-    #     df['gene_id'] = gene_id
-    #     df['group_id'] = gene_id
-    #     df['trait_id'] = 'eqtl'
-    #     df['chrom'] = df['chrom'].astype(str)
-    #
-    #     dfs.append(df)
-    #
-    # # Merge
-    # print('Concatenating dfs...')
-    # merged = dd.concat(dfs)
-    #
-    # # Repartition
-    # print('Repartitioning dfs...')
-    # nparts = min(100, merged.npartitions)
-    # merged = merged.repartition(npartitions=nparts)
-    #
-    # # Sort
-    # # print('Sorting...')
-    # # merged = merged.sort_values(
-    # #     [
-    # #         'study_id',
-    # #         'trait_id',
-    # #         'cell_id',
-    # #         'group_id',
-    # #         'chrom',
-    # #         'pos_b37'
-    # #     ]
-    # # )
-    #
-    # # Save as parquet
-    # print('Saving...')
-    # os.makedirs('molecular_qtl', exist_ok=True)
-    # out_path = 'molecular_qtl/GTEX7'
-    # merged.to_parquet(
-    #     out_path,
-    #     engine='fastparquet',
-    #     compression='snappy'
-    #     # file_scheme='hive'
-    #     # row_group_offsets=row_offset
-    # )
-    #
-    # # Save example as tsv
-    # out_path = 'molecular_qtl/GTEX7.tsv.gz'
-    # merged.head(1000).to_csv(
-    #     out_path,
-    #     sep='\t',
-    #     index=None,
-    #     compression='gzip'
-    # )
 
     return 0
 
