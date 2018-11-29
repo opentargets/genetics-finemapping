@@ -1,8 +1,6 @@
 Finemapping
 ===========
 
-
-
 ### Requirements
 - GCTA (>= v1.91.3) must be available in `$PATH`
 - [conda](https://conda.io/docs/)
