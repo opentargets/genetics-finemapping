@@ -1,13 +1,15 @@
 Finemapping
 ===========
 
+
+
 ### Requirements
 - GCTA (>= v1.91.3) must be available in `$PATH`
 - [conda](https://conda.io/docs/)
 - [Cromwell](https://cromwell.readthedocs.io/en/stable/) jar accessible via `$CROMWELL_JAR`
 - git
 
-### Setup enironment
+### Setup environment
 
 ```
 git clone https://github.com/opentargets/finemapping.git
@@ -16,7 +18,25 @@ bash setup.sh # Requires sudo log in part way through
 conda env create -n finemapping --file environment.yaml
 ```
 
-- Set `concurrent-job-limit` in `configs/cromwell.config`
+### Edit config files
+
+- `analysis.config.yaml`: Fine-mapping analysis parameters
+- `configs/input_files.config.tsv`: Manifest file specifying all studies to run fine-mapping on. File should be tab-separated with no header and the following column order:
+  * `in_pq`: Input parquet file
+  * `ld_ref`: Pattern of plink ld ref file. Use "{chrom}" as wildcard.
+  * `study_id`: Study ID in `in_pq`
+  * `cell_id`: Cell ID in `in_pq`
+  * `group_id`: Group ID in `in_pq`
+  * `trait_id`: Trait ID in `in_pq`
+  * `chrom`: Chrom in `in_pq`
+  * `method`: Method either "conditional" or "distance" based
+  * `out_top_loci`: Output top loci parquet
+  * `out_credset`: Output credible set parquet
+  * `out_log`: Output log file
+  * `tmpdir`: Temp directory
+- `configs/workflow.config.json`: Input files for the Cromwell workflow
+- `configs/cromwell.config`: Cromwell configuration file
+  * recommended: set `concurrent-job-limit`
 
 ### Usage
 
@@ -36,9 +56,7 @@ bash execute_workflow.test.sh
 ```
 
 # TODO
-- Add logging
 - Only load required fields from parquet files
-- When loading, apply row filters in additions to row-group filters
 - Add build 37 variant ID and position columns to sumstat files
 - Add eaf_estimated column to the sumstat files and select this as eaf when loading the data (currently using MAF for molecular_qtl which is incorrect)
 - Currently fails for sex chromosomes

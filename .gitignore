@@ -2,3 +2,4 @@ input/gwas/
 input/ld/
 input/molecular_qtl/
 input/raw/
+.DS_Store
