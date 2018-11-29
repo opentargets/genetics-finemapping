@@ -14,7 +14,7 @@ Finemapping
 ```
 git clone https://github.com/opentargets/finemapping.git
 cd finemapping
-bash setup.sh # Requires sudo log in part way through
+bash setup.sh
 conda env create -n finemapping --file environment.yaml
 ```
 
@@ -41,11 +41,25 @@ conda env create -n finemapping --file environment.yaml
 ### Usage
 
 ```
+# Start cromwell + mysql server
+tmux new -d -s cromwell docker-compose up
+
 # Activate environment
 source activate finemapping
 
-# Start mysql docker
-docker run -p 3306:3306 --name cromwell_myself -e MYSQL_ROOT_PASSWORD=cromwell_root_password -e MYSQL_DATABASE=cromwell_db -e MYSQL_USER=cromwell_user -e MYSQL_PASSWORD=cromwell_other_password -d mysql/mysql-server:5.5
+# Start mysql server docker
+mkdir -p mysql/data
+mkdir -p mysql/init
+docker run \
+  -v /home/ubuntu/finemapping/mysql/data:/var/lib/mysql \
+  -v /home/ubuntu/finemapping/mysql/init:/docker-entrypoint-initdb.d \
+  -p 3306:3306 \
+  --name cromwell_myself \
+  -e MYSQL_ROOT_PASSWORD=cromwell_root_password \
+  -e MYSQL_DATABASE=cromwell_db \
+  -e MYSQL_USER=cromwell_user \
+  -e MYSQL_PASSWORD=cromwell_other_password \
+  -d mysql/mysql-server:5.5
 
 # Create input manifest
 python 1_make_input_file_manifest.py
