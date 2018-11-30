@@ -123,14 +123,23 @@ def perfrom_conditional_adjustment(sumstats, in_plink, temp_dir, index_var,
     if cp.returncode != 0:
         gcta_log_file = '{0}.log'.format(gcta_out)
         gcta_error = read_error_from_gcta_log(gcta_log_file)
-        logger.error('GCTA error:\n\n{0}\n'.format(gcta_error))
+        if logger:
+            logger.error('  GCTA error:\n\n{0}\n'.format(gcta_error))
 
-    # Read output
+    # Read output if it exists
     gcta_res = '{0}.cma.cojo'.format(gcta_out)
-    cond_res = pd.read_csv(gcta_res, sep='\t', header=0)
-
-    # Merge to sumstats
-    sumstat_cond = merge_conditional_w_sumstats(sumstats, cond_res)
+    if os.path.exists(gcta_res):
+        cond_res = pd.read_csv(gcta_res, sep='\t', header=0)
+        # Merge to sumstats
+        sumstat_cond = merge_conditional_w_sumstats(sumstats, cond_res)
+    # Otherwise return empty sumstat df with conditional columns added
+    else:
+        if logger:
+            logger.warning(
+                '  GCTA output not found. Returning empty df in place'.format(gcta_res))
+        sumstat_cond = sumstats.loc[[], :]
+        for col in ['beta_cond', 'se_cond', 'pval_cond']:
+            sumstat_cond[col] = None
 
     return sumstat_cond
 

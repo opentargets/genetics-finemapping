@@ -96,10 +96,11 @@ def run_single_study(in_pq,
             tmp_dir,
             fm_wind=analysis_config['fm_wind'],
             method=method,
-            logger=logger
-        )
+            logger=logger)
         # Append result
-        credset_res_list.append(credset_res)
+        if credset_res is not None:
+            credset_res_list.append(credset_res)
+
     # Concat credible sets together if they exist
     if len(credset_res_list) > 0:
         credset_results = pd.concat(credset_res_list)

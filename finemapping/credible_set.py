@@ -82,24 +82,32 @@ def run_credible_set_for_locus(
         sumstat_cond['pval_cond'] = sumstat_cond['pval']
 
     # Do credible set analysis
-    if logger:
-        logger.info('  calculating credible sets...')
-    cred_sets = calc_credible_sets(sumstat_cond)
-    if logger:
-        logger.info('  found {0} in 95% and {1} in 99% cred sets'.format(
-        cred_sets.is95_credset.sum(), cred_sets.is99_credset.sum()
-        ))
+    if sumstat_cond.shape[0] > 0:
 
-    # Add index variant as a column
-    cred_sets.loc[:, 'index_variant_id'] = index_info['variant_id']
+        if logger:
+            logger.info('  calculating credible sets...')
+        cred_sets = calc_credible_sets(sumstat_cond)
+        if logger:
+            logger.info('  found {0} in 95% and {1} in 99% cred sets'.format(
+            cred_sets.is95_credset.sum(), cred_sets.is99_credset.sum()
+            ))
 
-    # Add column specifying method used
-    cred_sets.loc[:, 'multisignal_method'] = method
+        # Add index variant as a column
+        cred_sets.loc[:, 'index_variant_id'] = index_info['variant_id']
 
-    # Format output table
-    cred_sets = format_credset_output(cred_sets)
+        # Add column specifying method used
+        cred_sets.loc[:, 'multisignal_method'] = method
 
-    return cred_sets
+        # Format output table
+        cred_sets = format_credset_output(cred_sets)
+
+        return cred_sets
+    # If df is empty skip analysis
+    else:
+        if logger:
+            logger.warning('  skipping credible set analysis')
+
+        return None
 
 def format_credset_output(cred_sets):
     ''' Formats the cred_sets table for output

@@ -52,18 +52,18 @@ def main():
 
     # Write output
     logger.info('Writing outputs')
-    if top_loci.shape[0] > 0:
-        top_loci.to_parquet(
-            fname=args.toploci,
-            engine='fastparquet',
-            compression='snappy'
-        )
-    if credset_results is not None:
-        credset_results.to_parquet(
-            fname=args.credset,
-            engine='fastparquet',
-            compression='snappy'
-        )
+    # if top_loci.shape[0] > 0:
+    top_loci.to_parquet(
+        fname=args.toploci,
+        engine='fastparquet',
+        compression='snappy'
+    )
+    # if credset_results is not None:
+    credset_results.to_parquet(
+        fname=args.credset,
+        engine='fastparquet',
+        compression='snappy'
+    )
 
     # Log time taken
     logger.info('Time taken: {0}'.format(

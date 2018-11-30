@@ -75,3 +75,4 @@ bash execute_workflow.test.sh
   - Need to replace X with 23 in plink file or when specifying gcta command
   - Need to impute sex in plink file for X for cojo to work
 - Only create output folders if there is anything to write
+- Test if no top loci are found or not credible sets are found
