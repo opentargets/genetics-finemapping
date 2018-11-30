@@ -1,5 +1,5 @@
-Finemapping
-===========
+Fine-mapping pipeline
+=====================
 
 ### Requirements
 - GCTA (>= v1.91.3) must be available in `$PATH`
