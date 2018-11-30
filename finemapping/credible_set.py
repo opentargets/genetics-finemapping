@@ -101,13 +101,13 @@ def run_credible_set_for_locus(
         # Format output table
         cred_sets = format_credset_output(cred_sets)
 
-        return cred_sets
     # If df is empty skip analysis
     else:
         if logger:
             logger.warning('  skipping credible set analysis')
+        cred_sets = None
 
-        return None
+    return None
 
 def format_credset_output(cred_sets):
     ''' Formats the cred_sets table for output

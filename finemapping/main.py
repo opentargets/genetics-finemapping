@@ -8,16 +8,7 @@ import utils as fm_utils
 import top_loci as fm_top_loci
 import credible_set as fm_credible_set
 import tempfile
-# import yaml
-# import json
 import pandas as pd
-# from pprint import pprint # DEBUG
-# import dask
-# from dask.distributed import Client
-# from dask.distributed import Client
-# import os
-# import sys # DEBUG
-# import datetime
 
 def run_single_study(in_pq,
                      in_plink,
@@ -104,13 +95,26 @@ def run_single_study(in_pq,
     # Concat credible sets together if they exist
     if len(credset_res_list) > 0:
         credset_results = pd.concat(credset_res_list)
+    # Else creat an empty df
     else:
-        credset_results = None
+        credset_results = df_empty(
+            columns=fm_utils.get_meta_info(type='cred_set').keys(),
+            dtypes=fm_utils.get_meta_info(type='cred_set').values()
+        )
 
     if logger:
         logger.info('Completed credible set analysis')
 
     return top_loci, credset_results
+
+def df_empty(columns, dtypes, index=None):
+    ''' Creat an empty df
+    '''
+    assert len(columns)==len(dtypes)
+    df = pd.DataFrame(index=index)
+    for c,d in zip(columns, dtypes):
+        df[c] = pd.Series(dtype=d)
+    return df
 
 # def run_all_studies(gwas_sumstats_dir, mol_sumstats_dir, manifest_file,
 #         results_dir, analysis_config_file, temp_dir, skip_existing,

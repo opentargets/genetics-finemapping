@@ -39,12 +39,6 @@ conda env create -n finemapping --file environment.yaml
 ### Usage
 
 ```
-# Start cromwell + mysql server
-tmux new -d -s cromwell docker-compose up
-
-# Activate environment
-source activate finemapping
-
 # Start mysql server docker
 mkdir -p mysql/data
 mkdir -p mysql/init
@@ -59,12 +53,14 @@ docker run \
   -e MYSQL_PASSWORD=cromwell_other_password \
   -d mysql/mysql-server:5.5
 
+# Activate environment
+source activate finemapping
+
 # Create input manifest
 python 1_make_input_file_manifest.py
 
 # Execute workflow
 bash execute_workflow.test.sh
-
 ```
 
 # TODO
