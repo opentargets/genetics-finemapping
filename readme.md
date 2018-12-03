@@ -63,6 +63,23 @@ python 1_make_input_file_manifest.py
 bash execute_workflow.test.sh
 ```
 
+Useful commands:
+
+```
+# Find output directories that don't contain the expected files
+find ~/finemapping/output -mindepth 5 -maxdepth 5 -type d '!' -exec test -e "{}/top_loci.parquet" ';' -print
+find ~/finemapping/output -mindepth 5 -maxdepth 5 -type d '!' -exec test -e "{}/credible_set.parquet" ';' -print
+
+# List log files with errors
+grep -n -i error ~/finemapping/logs/study_id\=*/cell_id\=*/group_id\=*/trait_id\=*/chrom\=*/logfile.txt | cut -f 1 -d ":" | sort | uniq
+
+# How many have errors
+grep -n -i error ~/finemapping/logs/study_id\=*/cell_id\=*/group_id\=*/trait_id\=*/chrom\=*/logfile.txt | cut -f 1 -d ":" | sort | uniq | wc -l
+
+# Number of log files
+ls ~/finemapping/logs/study_id\=*/cell_id\=*/group_id\=*/trait_id\=*/chrom\=*/logfile.txt | wc -l
+```
+
 # TODO
 - Only load required fields from parquet files
 - Add build 37 variant ID and position columns to sumstat files
