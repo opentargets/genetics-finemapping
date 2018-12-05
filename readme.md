@@ -78,6 +78,9 @@ grep -n -i error ~/finemapping/logs/study_id\=*/cell_id\=*/group_id\=*/trait_id\
 
 # Number of log files
 ls ~/finemapping/logs/study_id\=*/cell_id\=*/group_id\=*/trait_id\=*/chrom\=*/logfile.txt | wc -l
+
+# Remove stopped containers
+docker ps -aq --no-trunc -f status=exited | xargs docker rm
 ```
 
 # TODO
@@ -87,5 +90,5 @@ ls ~/finemapping/logs/study_id\=*/cell_id\=*/group_id\=*/trait_id\=*/chrom\=*/lo
 - Currently fails for sex chromosomes
   - Need to replace X with 23 in plink file or when specifying gcta command
   - Need to impute sex in plink file for X for cojo to work
-- Only create output folders if there is anything to write
-- Test if no top loci are found or not credible sets are found
+- Change outputs to json, not parquet
+- In credible_set.py, need to extract a larger window (e.g. 2Mb) to perfrom conditional analysis on. Then restrict to the smaller finemapping window after conditional has been performed.
