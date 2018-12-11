@@ -1,4 +1,4 @@
-Finemapping pipleine
+Finemapping pipeline
 ====================
 
 Finemapping pipeline for Open Targets Genetics. The pipeline is currently bespoke to the Neale lab UK Biobank summary statistics (version 1) and must be run on a cluster using `bsub`.
