@@ -19,6 +19,8 @@ def run_credible_set_for_locus(
             in_plink,
             temp_dir,
             fm_wind,
+            cojo_window,
+            cojo_collinear,
             method='conditional',
             logger=None):
     ''' Run credible set analysis at a given locus (speficied by index_info)
@@ -36,12 +38,12 @@ def run_credible_set_for_locus(
 
     temp_dir = os.path.join(temp_dir, 'credible_set')
 
-    # Extract region surrounding the index variant
+    # Extract `cojo_window` region surrounding the index variant
     sumstat_wind = fm_utils.extract_window(
-        sumstats, index_info['chrom'], index_info['pos'], fm_wind)
+        sumstats, index_info['chrom'], index_info['pos'], cojo_window)
     if logger:
-        logger.info('  {0} rows in window around index variant'.format(
-        sumstat_wind.shape[0]))
+        logger.info('  {0} variants in {1}kb cojo window around index'
+                    ' variant'.format(sumstat_wind.shape[0], cojo_window))
 
     # Perform conditional analysis
     sumstat_cond = None
@@ -67,6 +69,8 @@ def run_credible_set_for_locus(
                 index_info['variant_id'],
                 index_info['chrom'],
                 cond_list,
+                cojo_window,
+                cojo_collinear,
                 logger=logger
             )
     else:
@@ -80,6 +84,13 @@ def run_credible_set_for_locus(
         sumstat_cond['beta_cond'] = sumstat_cond['beta']
         sumstat_cond['se_cond'] = sumstat_cond['se']
         sumstat_cond['pval_cond'] = sumstat_cond['pval']
+
+    # Extract `fm_wind` region surrounding the index variant
+    sumstat_wind = fm_utils.extract_window(
+        sumstats, index_info['chrom'], index_info['pos'], fm_wind)
+    if logger:
+        logger.info('  {0} variants in {1}kb fine-mapping window around index'
+                    ' variant'.format(sumstat_wind.shape[0], fm_wind))
 
     # Do credible set analysis
     if sumstat_cond.shape[0] > 0:

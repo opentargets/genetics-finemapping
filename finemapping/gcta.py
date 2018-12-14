@@ -75,8 +75,15 @@ def read_error_from_gcta_log(log_file):
                 error_lines.append(line.rstrip())
     return '\n'.join(error_lines)
 
-def perfrom_conditional_adjustment(sumstats, in_plink, temp_dir, index_var,
-        chrom, condition_on, logger=None):
+def perfrom_conditional_adjustment(sumstats,
+        in_plink,
+        temp_dir,
+        index_var,
+        chrom,
+        condition_on,
+        cojo_window=500,
+        cojo_collinear=0.9,
+        logger=None):
     ''' Uses GCTA-cojo to perform conditional analysis
     Args:
         sumstats (pd.df)

@@ -86,6 +86,8 @@ def run_single_study(in_pq,
             in_plink,
             tmp_dir,
             fm_wind=analysis_config['fm_wind'],
+            cojo_window=analysis_config['cojo_wind'],
+            cojo_collinear=analysis_config['cojo_colin'],
             method=method,
             logger=logger)
         # Append result

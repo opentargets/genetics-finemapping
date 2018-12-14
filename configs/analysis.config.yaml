@@ -10,7 +10,7 @@ clump_pval: 5e-8 # Maximum p-value for clumping output
 
 # GCTA cojo select parameters
 cojo_colin: 0.9   # Don't include SNPs that are colinear with an already selected SNP
-cojo_wind:  500   # (Kb) Assume SNPs outside window are in linkage equilibrium
+cojo_wind:  2000   # (Kb) Assume SNPs outside window are in linkage equilibrium
 cojo_p:     5e-8  # P-value for declaring signficant
 
 # Finemapping parameters
