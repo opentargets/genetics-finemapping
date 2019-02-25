@@ -1,5 +1,8 @@
-input/gwas/
-input/ld/
-input/molecular_qtl/
-input/raw/
+example_data/
 .DS_Store
+output/
+tmp/
+logs/
+old/
+mysql/
+docs/
