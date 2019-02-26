@@ -41,7 +41,7 @@ def main():
         in_plink=args.ld,
         study_id=args.study_id,
         phenotype_id=args.phenotype_id,
-        biofeature=args.biofeature,
+        bio_feature=args.bio_feature,
         chrom=args.chrom,
         analysis_config=config_dict,
         tmp_dir=args.tmpdir,
@@ -125,7 +125,7 @@ def parse_args():
                        required=True)
     
     # Add optional study identifier args
-    for key in ['phenotype_id', 'biofeature']:
+    for key in ['phenotype_id', 'bio_feature']:
         p.add_argument('--{0}'.format(key),
                        metavar="<str>",
                        help=("{0} to extract from pq".format(key)),

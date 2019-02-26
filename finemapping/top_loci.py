@@ -132,8 +132,8 @@ def get_distance_top_loci(sumstats, clump_dist=500, clump_p=5e-8):
         unclustered = pd.isnull(ss["cluster"])
 
     # Extract only top loci
-    selected_snps = ss.drop_duplicates(subset='cluster', keep='first') \
-                      .variant_id_b37
+    selected_snps = ss.drop_duplicates(
+        subset='cluster', keep='first')['variant_id']
     top_loci = sumstats.loc[sumstats['variant_id'].isin(selected_snps), :]
 
     return top_loci

@@ -87,7 +87,7 @@ docker ps -aq --no-trunc -f status=exited | xargs docker rm
 - Only load required fields from parquet files
 - Remove build 37 / 38 differentiation from scripts (still needed for excluding the MHC)
 - Remove cell_id, trait_id, group_id.
-- Keep study_id, phenotype_id, biofeature
+- Keep study_id, phenotype_id, bio_feature
 - Change loading of EAF, n_cases, n_total
 - Currently fails for sex chromosomes
   - Need to replace X with 23 in plink file or when specifying gcta command

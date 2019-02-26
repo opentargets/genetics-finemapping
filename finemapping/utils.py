@@ -10,7 +10,7 @@ import pandas as pd
 from collections import OrderedDict
 import os
 
-def load_sumstats(in_pq, study_id, phenotype_id=None, biofeature=None,
+def load_sumstats(in_pq, study_id, phenotype_id=None, bio_feature=None,
                   chrom=None, excl_mhc=None, min_maf=None, logger=None):
     ''' Loads summary statistics from Open Targets parquet format:
         - Loads only required rows
@@ -32,12 +32,12 @@ def load_sumstats(in_pq, study_id, phenotype_id=None, biofeature=None,
     if chrom:
         row_grp_filters.append(('chrom', '==', str(chrom)))
 
-    # Add biofeature to path
-    if biofeature:
-        in_pq = os.path.join(in_pq, 'biofeature={}'.format(biofeature))
+    # Add bio_feature to path
+    if bio_feature:
+        in_pq = os.path.join(in_pq, 'bio_feature={}'.format(bio_feature))
 
     # Create column filters
-    cols_to_keep = ['study_id', 'phenotype_id', 'biofeature', 'chrom', 'pos',
+    cols_to_keep = ['study_id', 'phenotype_id', 'bio_feature', 'chrom', 'pos',
                     'ref', 'alt', 'beta', 'se', 'pval', 'n_total', 'n_cases',
                     'eaf', 'is_cc']
 
@@ -58,9 +58,9 @@ def load_sumstats(in_pq, study_id, phenotype_id=None, biofeature=None,
          for filter in row_grp_filters] )
     df = df.query(query)
 
-    # Add biofeature back in
-    if biofeature:
-        df.loc[:, 'biofeature'] = biofeature
+    # Add bio_feature back in
+    if bio_feature:
+        df.loc[:, 'bio_feature'] = bio_feature
 
     #
     # Make exclusions
@@ -84,6 +84,12 @@ def load_sumstats(in_pq, study_id, phenotype_id=None, biofeature=None,
                        (df['pos_b38'] >= 28510120) &
                        (df['pos_b38'] <= 33480577) )
             df = df.loc[~is_mhc, :]
+    
+    # Create a variant ID
+    df['variant_id'] = (
+        df.loc[:, ['chrom', 'pos', 'ref', 'alt']]
+        .apply(lambda row: ':'.join([str(x) for x in row]), axis=1)
+    )
 
     return df
 
@@ -122,7 +128,7 @@ def get_credset_out_columns():
     return OrderedDict([
         ('study_id', 'study_id'),
         ('phenotype_id', 'phenotype_id'),
-        ('biofeature', 'biofeature'),
+        ('bio_feature', 'bio_feature'),
         ('lead_variant_id', 'lead_variant_id'),
         ('lead_chrom', 'lead_chrom'),
         ('lead_pos', 'lead_pos'),
@@ -156,7 +162,7 @@ def get_toploci_out_columns():
     return OrderedDict([
         ('study_id', 'study_id'),
         ('phenotype_id', 'phenotype_id'),
-        ('biofeature', 'biofeature'),
+        ('bio_feature', 'bio_feature'),
         ('variant_id', 'variant_id'),
         ('chrom', 'chrom'),
         ('pos', 'pos'),
@@ -177,7 +183,7 @@ def get_meta_info(type):
         meta = {
             'study_id': 'object',
             'phenotype_id': 'object',
-            'biofeature': 'object',
+            'bio_feature': 'object',
             'variant_id': 'object',
             'chrom': 'object',
             'pos': 'int64',
@@ -192,7 +198,7 @@ def get_meta_info(type):
         meta = {
             'study_id': 'object',
             'phenotype_id': 'object',
-            'biofeature': 'object',
+            'bio_feature': 'object',
             'lead_variant_id': 'object',
             'lead_chrom': 'object',
             'lead_pos': 'int64',
@@ -220,7 +226,7 @@ def get_meta_info(type):
         meta = {
             'study_id': 'object',
             'phenotype_id': 'object',
-            'biofeature': 'object',
+            'bio_feature': 'object',
             'chrom': 'object',
             'pos': 'int64',
             'ref': 'object',

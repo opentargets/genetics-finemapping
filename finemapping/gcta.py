@@ -192,12 +192,6 @@ def sumstat_to_gcta(sumstats, outf, p_threshold=None):
     # Make temp dir if it doesn't exist
     os.makedirs(os.path.split(outf)[0], exist_ok=True)
 
-    # Create a variant ID
-    sumstats['variant_id'] = (
-        sumstats.loc[:, ['chrom', 'pos', 'ref', 'alt']]
-            .apply(lambda row: ':'.join([str(x) for x in row]), axis=1)
-    )
-
     # Rename and extract required columns
     outdata = sumstats.rename(
         columns={"variant_id":"SNP",
@@ -225,6 +219,6 @@ def make_file_name_prefix(row):
     Return:
         str
     '''
-    cols = ['study_id', 'phenotype_id', 'biofeature', 'chrom']
+    cols = ['study_id', 'phenotype_id', 'bio_feature', 'chrom']
     pref = '_'.join([str(x) for x in row[cols].values[0]])
     return pref
