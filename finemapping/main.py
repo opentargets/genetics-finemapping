@@ -13,9 +13,8 @@ import pandas as pd
 def run_single_study(in_pq,
                      in_plink,
                      study_id,
-                     cell_id=None,
-                     group_id=None,
-                     trait_id=None,
+                     phenotype_id=None,
+                     biofeature=None,
                      chrom=None,
                      analysis_config=None,
                      tmp_dir=tempfile.gettempdir(),
@@ -35,13 +34,11 @@ def run_single_study(in_pq,
     sumstats = fm_utils.load_sumstats(
         in_pq,
         study_id,
-        cell_id=cell_id,
-        group_id=group_id,
-        trait_id=trait_id,
+        phenotype_id=phenotype_id,
+        biofeature=biofeature,
         chrom=chrom,
         min_maf=analysis_config['min_maf'],
         excl_mhc=analysis_config.get('exclude_MHC', None),
-        build=analysis_config['assembly'],
         logger=logger
     )
     if logger:
@@ -88,6 +85,7 @@ def run_single_study(in_pq,
             fm_wind=analysis_config['fm_wind'],
             cojo_window=analysis_config['cojo_wind'],
             cojo_collinear=analysis_config['cojo_colin'],
+            pp_threshold=analysis_config['pp_threshold'],
             method=method,
             logger=logger)
         # Append result

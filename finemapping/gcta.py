@@ -55,8 +55,7 @@ def get_conditional_top_loci(sumstats, in_plink, temp_dir,
     # Read results (if they exist)
     gcta_res = '{0}.jma.cojo'.format(gcta_out)
     if os.path.exists(gcta_res):
-        selected_snps = pd.read_csv(gcta_res, sep='\t', header=0)['SNP'] \
-                          .str.replace(':', '_')
+        selected_snps = pd.read_csv(gcta_res, sep='\t', header=0)['SNP']
     else:
         selected_snps = []
 
@@ -99,10 +98,10 @@ def perfrom_conditional_adjustment(sumstats,
     file_pref = make_file_name_prefix(sumstats.head(1))
     gcta_in = os.path.join(temp_dir, '{0}.{1}.gcta_format.tsv'.format(
         file_pref,
-        index_var))
+        index_var.replace(':', '_')))
     gcta_out = os.path.join(temp_dir, '{0}.{1}.gcta_out'.format(
         file_pref,
-        index_var))
+        index_var.replace(':', '_')))
 
     # Write sumstats
     sumstat_to_gcta(sumstats, gcta_in)
@@ -110,7 +109,7 @@ def perfrom_conditional_adjustment(sumstats,
     # Write a conditional list
     gcta_cond = os.path.join(temp_dir, '{0}.{1}.cond_list.txt'.format(
         file_pref,
-        index_var))
+        index_var.replace(':', '_')))
     write_cond_list(condition_on, gcta_cond)
 
     # Constuct command
@@ -160,7 +159,8 @@ def merge_conditional_w_sumstats(sumstats, cond_res):
         pd.df of sumstats
     '''
     # Make a variant_id key on the conditional results
-    cond_res['variant_id'] = cond_res['SNP'].str.replace(':', '_')
+    cond_res = cond_res.rename(columns={'SNP': 'variant_id'})
+    
     # Merge
     merged = pd.merge(
         sumstats,
@@ -192,23 +192,26 @@ def sumstat_to_gcta(sumstats, outf, p_threshold=None):
     # Make temp dir if it doesn't exist
     os.makedirs(os.path.split(outf)[0], exist_ok=True)
 
+    # Create a variant ID
+    sumstats['variant_id'] = (
+        sumstats.loc[:, ['chrom', 'pos', 'ref', 'alt']]
+            .apply(lambda row: ':'.join([str(x) for x in row]), axis=1)
+    )
+
     # Rename and extract required columns
     outdata = sumstats.rename(
         columns={"variant_id":"SNP",
-                 "alt_al":"A1",
-                 "ref_al":"A2",
+                 "alt":"A1",
+                 "ref":"A2",
                  "eaf":"freq",
                  "beta":"b",
                  "pval":"p",
-                 "n_samples":"N"})
+                 "n_total":"N"})
     outdata = outdata.loc[:, ["SNP", "A1", "A2", "freq", "b", "se", "p", "N"]]
 
     # Remove rows where p > p_threshold
     if p_threshold:
         outdata = outdata.loc[outdata['p'] <= p_threshold, :]
-
-    # Convert SNP name to match plink file
-    outdata['SNP'] = outdata['SNP'].str.replace('_', ':')
 
     # Save
     outdata.to_csv(outf, sep='\t', index=None)
@@ -222,6 +225,6 @@ def make_file_name_prefix(row):
     Return:
         str
     '''
-    cols = ['study_id', 'cell_id', 'group_id', 'trait_id', 'chrom']
+    cols = ['study_id', 'phenotype_id', 'biofeature', 'chrom']
     pref = '_'.join([str(x) for x in row[cols].values[0]])
     return pref

@@ -21,6 +21,7 @@ def run_credible_set_for_locus(
             fm_wind,
             cojo_window,
             cojo_collinear,
+            pp_threshold,
             method='conditional',
             logger=None):
     ''' Run credible set analysis at a given locus (speficied by index_info)
@@ -97,14 +98,20 @@ def run_credible_set_for_locus(
 
         if logger:
             logger.info('  calculating credible sets...')
-        cred_sets = calc_credible_sets(sumstat_cond)
+        cred_sets = calc_credible_sets(sumstat_cond, pp_threshold=pp_threshold)
+
         if logger:
             logger.info('  found {0} in 95% and {1} in 99% cred sets'.format(
             cred_sets.is95_credset.sum(), cred_sets.is99_credset.sum()
             ))
+            logger.info('  kept {0} vars with PP > {1}'.format(
+            cred_sets.shape[0], pp_threshold
+            ))
 
-        # Add index variant as a column
-        cred_sets.loc[:, 'index_variant_id'] = index_info['variant_id']
+        # Add index variant columns
+        cred_sets.loc[:, 'lead_variant_id'] = index_info['variant_id']
+        cred_sets[['lead_chrom', 'lead_pos', 'lead_ref', 'lead_alt']] = \
+            cred_sets.lead_variant_id.str.split(':', expand=True)
 
         # Add column specifying method used
         cred_sets.loc[:, 'multisignal_method'] = method
@@ -118,7 +125,7 @@ def run_credible_set_for_locus(
             logger.warning('  skipping credible set analysis')
         cred_sets = None
 
-    return None
+    return cred_sets
 
 def format_credset_output(cred_sets):
     ''' Formats the cred_sets table for output
@@ -129,12 +136,18 @@ def format_credset_output(cred_sets):
     '''
     cols = fm_utils.get_credset_out_columns()
     meta = fm_utils.get_meta_info(type='cred_set')
-    return cred_sets.loc[:, cols.keys()].rename(columns=cols)
+    df = (
+        cred_sets.loc[:, cols.keys()]
+                 .rename(columns=cols)
+                 .astype(dtype=meta)
+    )
+    return df
 
-def calc_credible_sets(data):
+def calc_credible_sets(data, pp_threshold):
     ''' Calculates credible sets from provided sumstats
     Args:
         data (pd.df): sumstats to perform analysis on
+        pp_threshold (float): returns any variant in ( (95% OR 99% threshold) OR pp > pp_threshold )
     Returns
         pd.df of results
     '''
@@ -144,14 +157,14 @@ def calc_credible_sets(data):
         data.pval_cond[data.pval_cond == 0.0] = sys.float_info.min
 
     # Calculate case proportions
-    data['case_prop'] = data['n_cases'] / data['n_samples']
+    data['case_prop'] = data['n_cases'] / data['n_total']
 
     # Calc ABFs
     # print(calc_abf(0.808621, 0.17690, 290365, 0.6203537)) # Should return -3.311501
     data["logABF"] = data.apply(
         lambda row: calc_abf(pval=row['pval_cond'],
                              maf=freq_to_maf(row['eaf']),
-                             n=row['n_samples'],
+                             n=row['n_total'],
                              prop_cases=row['case_prop'] if row['is_cc'] else None
         ), axis=1)
     data = data.sort_values("logABF", ascending=False)
@@ -172,7 +185,8 @@ def calc_credible_sets(data):
     data["is99_credset"] = data["is99_credset"].map({1:True, 0:False})
 
     # Only keep rows that are in the 95 or 99% credible sets
-    to_keep = (data["is95_credset"] | data["is99_credset"])
+    to_keep = ((data["is95_credset"] | data["is99_credset"])
+               | (data["postprob"] > pp_threshold) )
     cred_set_res = data.loc[to_keep, :]
 
     return cred_set_res

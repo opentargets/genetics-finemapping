@@ -8,19 +8,17 @@ import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
+import os
 
-def load_sumstats(in_pq, study_id, cell_id=None, group_id=None, trait_id=None,
-                  chrom=None, excl_mhc=None, min_maf=None, build='b37',
-                  logger=None):
+def load_sumstats(in_pq, study_id, phenotype_id=None, biofeature=None,
+                  chrom=None, excl_mhc=None, min_maf=None, logger=None):
     ''' Loads summary statistics from Open Targets parquet format:
         - Loads only required rows
         - Converts to pandas
-        - Extracts N samples, N cases, EAF
         - TODO only extract required columns
         - TODO extract eaf
     Args:
         excl_mhc (b37|b38|None): whether to exclude the MHC region
-        build (b37|b38): which build to use
     '''
 
     #
@@ -29,25 +27,29 @@ def load_sumstats(in_pq, study_id, cell_id=None, group_id=None, trait_id=None,
 
     # Create row-group filters
     row_grp_filters = [('study_id', '==', study_id)]
-    if cell_id:
-        row_grp_filters.append(('cell_id', '==', cell_id))
-    if group_id:
-        row_grp_filters.append(('group_id', '==', group_id))
-    if trait_id:
-        row_grp_filters.append(('trait_id', '==', trait_id))
+    if phenotype_id:
+        row_grp_filters.append(('phenotype_id', '==', phenotype_id))
     if chrom:
         row_grp_filters.append(('chrom', '==', str(chrom)))
 
+    # Add biofeature to path
+    if biofeature:
+        in_pq = os.path.join(in_pq, 'biofeature={}'.format(biofeature))
+
     # Create column filters
-    # TODO
+    cols_to_keep = ['study_id', 'phenotype_id', 'biofeature', 'chrom', 'pos',
+                    'ref', 'alt', 'beta', 'se', 'pval', 'n_total', 'n_cases',
+                    'eaf', 'is_cc']
 
     # Read file
-    df = dd.read_parquet(in_pq,
+    in_pq_pattern = os.path.join(in_pq, '*.parquet')
+    df = dd.read_parquet(in_pq_pattern,
+                         columns=cols_to_keep,
                          filters=row_grp_filters,
                          engine='fastparquet')
 
     # Conversion to in-memory pandas
-    df = df.compute(scheduler='single-threaded') # DEBUG
+    df = df.compute(scheduler='single-threaded')
     df = df.astype(dtype=get_meta_info(type='sumstats'))
 
     # Apply row filters
@@ -56,30 +58,9 @@ def load_sumstats(in_pq, study_id, cell_id=None, group_id=None, trait_id=None,
          for filter in row_grp_filters] )
     df = df.query(query)
 
-    #
-    # Extract fields
-    #
-
-    # Extract n_samples
-    df['n_samples'] = np.where(pd.isnull(df['n_samples_variant_level']),
-                               df['n_samples_study_level'],
-                               df['n_samples_variant_level'])
-    # Extract n_cases
-    df['n_cases'] = np.where(pd.isnull(df['n_cases_variant_level']),
-                             df['n_cases_study_level'],
-                             df['n_cases_variant_level'])
-
-    # Extract EAF. TODO this needs to be changed to use estimated EAF if EAF_est
-    if pd.isnull(df['eaf']).any():
-        if logger:
-            logger.warning('Warning: using MAF instead of EAF')
-    df['eaf'] = np.where(pd.isnull(df['eaf']),
-                             df['maf'],
-                             df['eaf'])
-
-    # Extract required build
-    df['variant_id'] = df['variant_id_{0}'.format(build)]
-    df['pos'] = df['pos_{0}'.format(build)]
+    # Add biofeature back in
+    if biofeature:
+        df.loc[:, 'biofeature'] = biofeature
 
     #
     # Make exclusions
@@ -140,22 +121,24 @@ def get_credset_out_columns():
     '''
     return OrderedDict([
         ('study_id', 'study_id'),
-        ('cell_id', 'cell_id'),
-        ('gene_id', 'gene_id'),
-        ('group_id', 'group_id'),
-        ('trait_id', 'trait_id'),
-        ('index_variant_id', 'variant_id_index'),
-        ('variant_id', 'variant_id_tag'),
-        ('pos', 'pos_tag'),
-        ('chrom', 'chrom_tag'),
-        ('ref_al', 'ref_al_tag'),
-        ('alt_al', 'alt_al_tag'),
-        ('beta', 'beta_tag'),
-        ('se', 'se_tag'),
-        ('pval', 'pval_tag'),
-        ('beta_cond', 'beta_cond_tag'),
-        ('se_cond', 'se_cond_tag'),
-        ('pval_cond', 'pval_cond_tag'),
+        ('phenotype_id', 'phenotype_id'),
+        ('biofeature', 'biofeature'),
+        ('lead_variant_id', 'lead_variant_id'),
+        ('lead_chrom', 'lead_chrom'),
+        ('lead_pos', 'lead_pos'),
+        ('lead_ref', 'lead_ref'),
+        ('lead_alt', 'lead_alt'),
+        ('variant_id', 'tag_variant_id'),
+        ('chrom', 'tag_chrom'),
+        ('pos', 'tag_pos'),
+        ('ref', 'tag_ref'),
+        ('alt', 'tag_alt'),
+        ('beta', 'tag_beta'),
+        ('se', 'tag_se'),
+        ('pval', 'tag_pval'),
+        ('beta_cond', 'tag_beta_cond'),
+        ('se_cond', 'tag_se_cond'),
+        ('pval_cond', 'tag_pval_cond'),
         ('logABF', 'logABF'),
         ('postprob', 'postprob'),
         ('postprob_cumsum', 'postprob_cumsum'),
@@ -172,15 +155,13 @@ def get_toploci_out_columns():
     '''
     return OrderedDict([
         ('study_id', 'study_id'),
-        ('cell_id', 'cell_id'),
-        ('gene_id', 'gene_id'),
-        ('group_id', 'group_id'),
-        ('trait_id', 'trait_id'),
+        ('phenotype_id', 'phenotype_id'),
+        ('biofeature', 'biofeature'),
         ('variant_id', 'variant_id'),
         ('chrom', 'chrom'),
         ('pos', 'pos'),
-        ('ref_al', 'ref_al'),
-        ('alt_al', 'alt_al'),
+        ('ref', 'ref'),
+        ('alt', 'alt'),
         ('beta', 'beta'),
         ('se', 'se'),
         ('pval', 'pval'),
@@ -195,16 +176,13 @@ def get_meta_info(type):
     if type == 'top_loci':
         meta = {
             'study_id': 'object',
-            'cell_id': 'object',
-            'gene_id': 'object',
-            'group_id': 'object',
-            'trait_id': 'object',
+            'phenotype_id': 'object',
+            'biofeature': 'object',
             'variant_id': 'object',
-            # 'chrom': 'category',
             'chrom': 'object',
             'pos': 'int64',
-            'ref_al': 'object',
-            'alt_al': 'object',
+            'ref': 'object',
+            'alt': 'object',
             'beta': 'float64',
             'se': 'float64',
             'pval': 'float64',
@@ -213,23 +191,24 @@ def get_meta_info(type):
     elif type == 'cred_set':
         meta = {
             'study_id': 'object',
-            'cell_id': 'object',
-            'gene_id': 'object',
-            'group_id': 'object',
-            'trait_id': 'object',
-            'variant_id_index': 'object',
-            'variant_id_tag': 'object',
-            'pos_tag': 'int64',
-            # 'chrom_tag': 'category',
-            'chrom_tag': 'object',
-            'ref_al_tag': 'object',
-            'alt_al_tag': 'object',
-            'beta_tag': 'float64',
-            'se_tag': 'float64',
-            'pval_tag': 'float64',
-            'beta_cond_tag': 'float64',
-            'se_cond_tag': 'float64',
-            'pval_cond_tag': 'float64',
+            'phenotype_id': 'object',
+            'biofeature': 'object',
+            'lead_variant_id': 'object',
+            'lead_chrom': 'object',
+            'lead_pos': 'int64',
+            'lead_ref': 'object',
+            'lead_alt': 'object',
+            'tag_variant_id': 'object',
+            'tag_chrom': 'object',
+            'tag_pos': 'int64',
+            'tag_ref': 'object',
+            'tag_alt': 'object',
+            'tag_beta': 'float64',
+            'tag_se': 'float64',
+            'tag_pval': 'float64',
+            'tag_beta_cond': 'float64',
+            'tag_se_cond': 'float64',
+            'tag_pval_cond': 'float64',
             'logABF': 'float64',
             'postprob': 'float64',
             'postprob_cumsum': 'float64',
@@ -239,28 +218,22 @@ def get_meta_info(type):
         }
     elif type == 'sumstats':
         meta = {
-            'variant_id_b37': 'object',
-            'pos_b37': 'int64',
-            'ref_al': 'object',
-            'alt_al': 'object',
+            'study_id': 'object',
+            'phenotype_id': 'object',
+            'biofeature': 'object',
+            'chrom': 'object',
+            'pos': 'int64',
+            'ref': 'object',
+            'alt': 'object',
             'beta': 'float64',
             'se': 'float64',
             'pval': 'float64',
-            'n_samples_variant_level': 'float64',
-            'n_samples_study_level': 'float64',
-            'n_cases_variant_level': 'float64',
-            'n_cases_study_level': 'float64',
+            'n_total': 'float64',
+            'n_cases': 'float64',
             'eaf': 'float64',
-            'maf': 'float64',
-            'info': 'float64',
-            'is_cc': 'bool',
-            'study_id': 'object',
-            'group_id': 'object',
-            'cell_id': 'object',
-            'gene_id': 'object',
-            'trait_id': 'object',
-            'chrom': 'object'
+            'is_cc': 'bool'
         }
+
     return meta
 
 def is_local(path):

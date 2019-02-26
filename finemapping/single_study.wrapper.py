@@ -40,9 +40,8 @@ def main():
         in_pq=args.pq,
         in_plink=args.ld,
         study_id=args.study_id,
-        cell_id=args.cell_id,
-        group_id=args.group_id,
-        trait_id=args.trait_id,
+        phenotype_id=args.phenotype_id,
+        biofeature=args.biofeature,
         chrom=args.chrom,
         analysis_config=config_dict,
         tmp_dir=args.tmpdir,
@@ -50,20 +49,42 @@ def main():
         logger=logger
     )
 
+    # Add 'type' column to outputs
+    top_loci.insert(0, 'type', args.type)
+    credset_results.insert(0, 'type', args.type)
+
     # Write output
     logger.info('Writing outputs')
-    # if top_loci.shape[0] > 0:
-    top_loci.to_parquet(
-        fname=args.toploci,
-        engine='fastparquet',
-        compression='snappy'
+
+    # As json
+    top_loci.to_json(
+        args.toploci,
+        orient='records',
+        lines=True,
+        compression='gzip'
     )
-    # if credset_results is not None:
-    credset_results.to_parquet(
-        fname=args.credset,
-        engine='fastparquet',
-        compression='snappy'
+    credset_results.to_json(
+        args.credset,
+        orient='records',
+        lines=True,
+        compression='gzip'
     )
+
+    # # As parquet
+    # top_loci.to_parquet(
+    #     fname=args.toploci,
+    #     engine='pyarrow',
+    #     flavor='spark',
+    #     compression='snappy',
+    #     index=False
+    # )
+    # credset_results.to_parquet(
+    #     fname=args.credset,
+    #     engine='pyarrow',
+    #     flavor='spark',
+    #     compression='snappy',
+    #     index=False
+    # )
 
     # Log time taken
     logger.info('Time taken: {0}'.format(
@@ -95,15 +116,16 @@ def parse_args():
                    type=str,
                    required=True)
 
-    # Add study identifier args
-    for key in ['study_id', 'trait_id', 'chrom']:
+    # Add required study identifier args
+    for key in ['type', 'study_id', 'chrom']:
         p.add_argument('--{0}'.format(key),
                        metavar="<str>",
                        help=("{0} to extract from pq".format(key)),
                        type=str,
                        required=True)
-    # Add mol trait study identifier args
-    for key in ['cell_id', 'group_id']:
+    
+    # Add optional study identifier args
+    for key in ['phenotype_id', 'biofeature']:
         p.add_argument('--{0}'.format(key),
                        metavar="<str>",
                        help=("{0} to extract from pq".format(key)),
@@ -122,12 +144,12 @@ def parse_args():
     # Add output file
     p.add_argument('--toploci',
                    metavar="<file>",
-                   help=("Output: top loci parquet file"),
+                   help=("Output: top loci json file"),
                    type=str,
                    required=True)
     p.add_argument('--credset',
                    metavar="<file>",
-                   help=("Output: credible set parquet file"),
+                   help=("Output: credible set json file"),
                    type=str,
                    required=True)
     p.add_argument('--log',

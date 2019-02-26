@@ -85,10 +85,13 @@ docker ps -aq --no-trunc -f status=exited | xargs docker rm
 
 # TODO
 - Only load required fields from parquet files
-- Add build 37 variant ID and position columns to sumstat files
-- Add eaf_estimated column to the sumstat files and select this as eaf when loading the data (currently using MAF for molecular_qtl which is incorrect)
+- Remove build 37 / 38 differentiation from scripts (still needed for excluding the MHC)
+- Remove cell_id, trait_id, group_id.
+- Keep study_id, phenotype_id, biofeature
+- Change loading of EAF, n_cases, n_total
 - Currently fails for sex chromosomes
   - Need to replace X with 23 in plink file or when specifying gcta command
   - Need to impute sex in plink file for X for cojo to work
 - Change outputs to json, not parquet
-- In credible_set.py, need to extract a larger window (e.g. 2Mb) to perfrom conditional analysis on. Then restrict to the smaller finemapping window after conditional has been performed.
+- Add type column to outputs
+- Don't threshold the PP on credible set analysis

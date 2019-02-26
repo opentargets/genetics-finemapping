@@ -34,7 +34,7 @@ def detect_top_loci(sumstats, in_plink, temp_dir,
             rows_below_threshold, cojo_p
         ))
 
-    # Skip if clumping there are no variants with pval < p_threshold
+    # Skip clumping if there are no variants with pval < p_threshold
     if rows_below_threshold == 0:
         if logger:
             logger.info('No variants with pval < p_threshold, skipping clumping...')
@@ -87,9 +87,12 @@ def format_top_loci_output(top_loci):
     '''
     cols = fm_utils.get_toploci_out_columns()
     meta = fm_utils.get_meta_info(type='top_loci')
-    return top_loci.loc[:, cols.keys()] \
-                   .rename(columns=cols) \
-                   .astype(dtype=meta)
+    df = (
+        top_loci.loc[:, cols.keys()]
+                .rename(columns=cols)
+                .astype(dtype=meta)
+    )
+    return df
 
 def get_distance_top_loci(sumstats, clump_dist=500, clump_p=5e-8):
     ''' Clump top loci based on distance.
