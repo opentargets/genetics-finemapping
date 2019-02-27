@@ -6,3 +6,6 @@ logs/
 old/
 mysql/
 docs/
+cromwell-*/
+docker-*/
+spark-*/

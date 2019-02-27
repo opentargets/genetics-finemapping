@@ -41,11 +41,12 @@ def main():
         in_plink=args.ld,
         study_id=args.study_id,
         phenotype_id=args.phenotype_id,
-        bio_feature=args.bio_feature,
+        biofeature=args.biofeature,
         chrom=args.chrom,
         analysis_config=config_dict,
         tmp_dir=args.tmpdir,
         method=args.method,
+        pval_threshold=args.pval_threshold,
         logger=logger
     )
 
@@ -125,7 +126,7 @@ def parse_args():
                        required=True)
     
     # Add optional study identifier args
-    for key in ['phenotype_id', 'bio_feature']:
+    for key in ['phenotype_id', 'biofeature']:
         p.add_argument('--{0}'.format(key),
                        metavar="<str>",
                        help=("{0} to extract from pq".format(key)),
@@ -139,6 +140,11 @@ def parse_args():
                          " (gcta-cojo) or distance based with conditional"),
                    type=str,
                    choices=['conditional', 'distance'],
+                   required=True)
+    p.add_argument('--pval_threshold',
+                   metavar="<float>",
+                   help=('P-value threshold to be considered "significant"'),
+                   type=float,
                    required=True)
 
     # Add output file

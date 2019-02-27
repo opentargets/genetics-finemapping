@@ -5,12 +5,12 @@ min_maf:   0.005  # Min minor allele freq
 
 # Distance based clumping
 clump_dist: 500  # Distance (kb) either side of index to clump by
-clump_pval: 5e-8 # Maximum p-value for clumping output
+# clump_pval: 5e-8 # Maximum p-value for clumping output. See cojo_p
 
 # GCTA cojo select parameters
 cojo_colin: 0.9   # Don't include SNPs that are colinear with an already selected SNP
 cojo_wind:  2000   # (Kb) Assume SNPs outside window are in linkage equilibrium
-cojo_p:     5e-8  # P-value for declaring signficant
+#cojo_p:     5e-8  # P-value for declaring signficant. This is now specified as a study specific argument in the manifest
 
 # Finemapping parameters
 fm_wind: 500   # (Kb) Window around the index on which to perform credible set analysis

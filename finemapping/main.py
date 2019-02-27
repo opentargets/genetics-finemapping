@@ -14,11 +14,12 @@ def run_single_study(in_pq,
                      in_plink,
                      study_id,
                      phenotype_id=None,
-                     bio_feature=None,
+                     biofeature=None,
                      chrom=None,
                      analysis_config=None,
                      tmp_dir=tempfile.gettempdir(),
                      method='conditional',
+                     pval_threshold=5e-8,
                      logger=None):
     ''' Runs the top loci and credible set analysis on a single study
     '''
@@ -35,7 +36,7 @@ def run_single_study(in_pq,
         in_pq,
         study_id,
         phenotype_id=phenotype_id,
-        bio_feature=bio_feature,
+        biofeature=biofeature,
         chrom=chrom,
         min_maf=analysis_config['min_maf'],
         excl_mhc=analysis_config.get('exclude_MHC', None),
@@ -53,11 +54,11 @@ def run_single_study(in_pq,
         tmp_dir,
         method=method,
         maf=analysis_config['min_maf'],
-        cojo_p=float(analysis_config['cojo_p']),
+        cojo_p=float(pval_threshold),
         cojo_window=analysis_config['cojo_wind'],
         cojo_collinear=analysis_config['cojo_colin'],
         clump_dist=analysis_config['clump_dist'],
-        clump_p=float(analysis_config['clump_pval']),
+        clump_p=float(pval_threshold),
         logger=logger
     )
     if logger:
@@ -112,6 +113,6 @@ def df_empty(columns, dtypes, index=None):
     '''
     assert len(columns)==len(dtypes)
     df = pd.DataFrame(index=index)
-    for c,d in zip(columns, dtypes):
+    for c, d in zip(columns, dtypes):
         df[c] = pd.Series(dtype=d)
     return df

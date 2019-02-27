@@ -10,11 +10,12 @@ python finemapping/single_study.wrapper.py \
   --config_file 'configs/analysis.config.yaml' \
   --study_id 'GCST004132_cr' \
   --phenotype_id 'None' \
-  --bio_feature 'None' \
+  --biofeature 'None' \
   --type 'gwas' \
   --chrom '22' \
   --method 'conditional' \
-  --toploci 'output/study_id=GCST004132_cr/phenotype_id=/bio_feature=/chrom=22/top_loci.json.gz' \
-  --credset 'output/study_id=GCST004132_cr/phenotype_id=/bio_feature=/chrom=22/credible_set.json.gz' \
-  --tmpdir 'tmp/study_id=GCST004132_cr/phenotype_id=/bio_feature=/chrom=22/' \
-  --log 'logs/study_id=GCST004132_cr/phenotype_id=/bio_feature=/chrom=22/logfile.txt'
+  --pval_threshold 5e-8 \
+  --toploci 'output/study_id=GCST004132_cr/phenotype_id=/biofeature=/chrom=22/top_loci.json.gz' \
+  --credset 'output/study_id=GCST004132_cr/phenotype_id=/biofeature=/chrom=22/credible_set.json.gz' \
+  --tmpdir 'tmp/study_id=GCST004132_cr/phenotype_id=/biofeature=/chrom=22/' \
+  --log 'logs/study_id=GCST004132_cr/phenotype_id=/biofeature=/chrom=22/logfile.txt'

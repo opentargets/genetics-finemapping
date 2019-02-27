@@ -10,7 +10,7 @@ import pandas as pd
 from collections import OrderedDict
 import os
 
-def load_sumstats(in_pq, study_id, phenotype_id=None, bio_feature=None,
+def load_sumstats(in_pq, study_id, phenotype_id=None, biofeature=None,
                   chrom=None, excl_mhc=None, min_maf=None, logger=None):
     ''' Loads summary statistics from Open Targets parquet format:
         - Loads only required rows
@@ -32,12 +32,12 @@ def load_sumstats(in_pq, study_id, phenotype_id=None, bio_feature=None,
     if chrom:
         row_grp_filters.append(('chrom', '==', str(chrom)))
 
-    # Add bio_feature to path
-    if bio_feature:
-        in_pq = os.path.join(in_pq, 'bio_feature={}'.format(bio_feature))
+    # Add biofeature to path
+    if biofeature:
+        in_pq = os.path.join(in_pq, 'biofeature={}'.format(biofeature))
 
     # Create column filters
-    cols_to_keep = ['study_id', 'phenotype_id', 'bio_feature', 'chrom', 'pos',
+    cols_to_keep = ['study_id', 'phenotype_id', 'biofeature', 'chrom', 'pos',
                     'ref', 'alt', 'beta', 'se', 'pval', 'n_total', 'n_cases',
                     'eaf', 'is_cc']
 
@@ -58,9 +58,9 @@ def load_sumstats(in_pq, study_id, phenotype_id=None, bio_feature=None,
          for filter in row_grp_filters] )
     df = df.query(query)
 
-    # Add bio_feature back in
-    if bio_feature:
-        df.loc[:, 'bio_feature'] = bio_feature
+    # Add biofeature back in
+    if biofeature:
+        df.loc[:, 'biofeature'] = biofeature
 
     #
     # Make exclusions
@@ -128,7 +128,7 @@ def get_credset_out_columns():
     return OrderedDict([
         ('study_id', 'study_id'),
         ('phenotype_id', 'phenotype_id'),
-        ('bio_feature', 'bio_feature'),
+        ('biofeature', 'biofeature'),
         ('lead_variant_id', 'lead_variant_id'),
         ('lead_chrom', 'lead_chrom'),
         ('lead_pos', 'lead_pos'),
@@ -162,7 +162,7 @@ def get_toploci_out_columns():
     return OrderedDict([
         ('study_id', 'study_id'),
         ('phenotype_id', 'phenotype_id'),
-        ('bio_feature', 'bio_feature'),
+        ('biofeature', 'biofeature'),
         ('variant_id', 'variant_id'),
         ('chrom', 'chrom'),
         ('pos', 'pos'),
@@ -183,7 +183,7 @@ def get_meta_info(type):
         meta = {
             'study_id': 'object',
             'phenotype_id': 'object',
-            'bio_feature': 'object',
+            'biofeature': 'object',
             'variant_id': 'object',
             'chrom': 'object',
             'pos': 'int64',
@@ -198,7 +198,7 @@ def get_meta_info(type):
         meta = {
             'study_id': 'object',
             'phenotype_id': 'object',
-            'bio_feature': 'object',
+            'biofeature': 'object',
             'lead_variant_id': 'object',
             'lead_chrom': 'object',
             'lead_pos': 'int64',
@@ -226,7 +226,7 @@ def get_meta_info(type):
         meta = {
             'study_id': 'object',
             'phenotype_id': 'object',
-            'bio_feature': 'object',
+            'biofeature': 'object',
             'chrom': 'object',
             'pos': 'int64',
             'ref': 'object',
