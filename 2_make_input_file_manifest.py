@@ -48,11 +48,11 @@ def main():
             out_record['out_top_loci'] = out_path.format(
                 out_record['study_id'], out_record['phenotype_id'],
                 out_record['biofeature'], out_record['chrom']
-            ) + '/top_loci.json'
+            ) + '/top_loci.json.gz'
             out_record['out_credset'] = out_path.format(
                 out_record['study_id'], out_record['phenotype_id'],
                 out_record['biofeature'], out_record['chrom']
-            ) + '/credible_set.json'
+            ) + '/credible_set.json.gz'
             out_record['out_log'] = log_path.format(
                 out_record['study_id'], out_record['phenotype_id'],
                 out_record['biofeature'], out_record['chrom']

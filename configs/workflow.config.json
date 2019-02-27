@@ -2,6 +2,8 @@
   "finemapping.inputManifestFile": "/Users/em21/Projects/genetics-finemapping/configs/input_files.config.tsv",
   "finemapping.finemap_single_study.config_file": "/Users/em21/Projects/genetics-finemapping/configs/analysis.config.yaml",
   "finemapping.finemap_single_study.script": "/Users/em21/Projects/genetics-finemapping/finemapping/single_study.wrapper.py",
+  "finemapping.concat_toploci.script": "/Users/em21/Projects/genetics-finemapping/utils/concat_json.py",
   "finemapping.concat_toploci.out": "/Users/em21/Projects/genetics-finemapping/output/top_loci.json.gz",
+  "finemapping.concat_credset.script": "/Users/em21/Projects/genetics-finemapping/utils/concat_json.py",
   "finemapping.concat_credset.out": "/Users/em21/Projects/genetics-finemapping/output/credible_sets.json.gz"
 }

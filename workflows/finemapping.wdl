@@ -75,29 +75,29 @@ task finemap_single_study {
   }
 }
 
-# Concatenate jsons together
-task concat_json {
-  Array[File] in
-  String out
-  command {
-    zcat < ${sep=" " in} | gzip -c > ${out}
-  }
-  output {
-    File result = "${out}"
-  }
-}
-
-# # Task to load parquets into memory and write to a single file
-# task concat_parquets {
-#   String script
+# # Concatenate jsons together
+# task concat_json {
 #   Array[File] in
 #   String out
 #   command {
-#     python ${script} \
-#       --in_parquets ${sep=" " in} \
-#       --out ${out} \
+#     zcat < ${sep=" " in} | gzip -c > ${out}
 #   }
 #   output {
 #     File result = "${out}"
 #   }
 # }
+
+# Task to load jsons into memory and write to a single file
+task concat_json {
+  String script
+  Array[File] in
+  String out
+  command {
+    python ${script} \
+      --in_json ${sep=" " in} \
+      --out ${out} \
+  }
+  output {
+    File result = "${out}"
+  }
+}
