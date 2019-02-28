@@ -37,7 +37,7 @@ def load_sumstats(in_pq, study_id, phenotype_id=None, biofeature=None,
         in_pq = os.path.join(in_pq, 'biofeature={}'.format(biofeature))
 
     # Create column filters
-    cols_to_keep = ['study_id', 'phenotype_id', 'biofeature', 'chrom', 'pos',
+    cols_to_keep = ['study_id', 'phenotype_id', 'chrom', 'pos',
                     'ref', 'alt', 'beta', 'se', 'pval', 'n_total', 'n_cases',
                     'eaf', 'is_cc']
 
@@ -53,14 +53,17 @@ def load_sumstats(in_pq, study_id, phenotype_id=None, biofeature=None,
     df = df.astype(dtype=get_meta_info(type='sumstats'))
 
     # Apply row filters
-    query = ' & '.join(
-        ['{} {} "{}"'.format(filter[0], filter[1], filter[2])
-         for filter in row_grp_filters] )
+    query_parts = []
+    for part in row_grp_filters:
+        if isinstance(part[2], int):
+            query_parts.append('{} {} {}'.format(part[0], part[1], part[2]))
+        else:
+            query_parts.append('{} {} "{}"'.format(part[0], part[1], part[2]))
+    query = ' & '.join(query_parts)
     df = df.query(query)
 
     # Add biofeature back in
-    if biofeature:
-        df.loc[:, 'biofeature'] = biofeature
+    df.loc[:, 'biofeature'] = biofeature
 
     #
     # Make exclusions
@@ -226,7 +229,7 @@ def get_meta_info(type):
         meta = {
             'study_id': 'object',
             'phenotype_id': 'object',
-            'biofeature': 'object',
+            # 'biofeature': 'object',
             'chrom': 'object',
             'pos': 'int64',
             'ref': 'object',
