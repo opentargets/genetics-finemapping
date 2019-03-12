@@ -184,7 +184,7 @@ def make_logger(log_file):
     '''
     # Basic setup
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         datefmt='%Y-%m-%d %H:%M:%S',
         stream=None)
     # Create formatter
