@@ -26,8 +26,8 @@ def main():
 
     # Args
     gwas_pval_threshold = 5e-8
-    gwas_pattern = 'example_data/sumstats/gwas/*.parquet'
-    mol_pattern = 'example_data/sumstats/molecular_trait/*.parquet'
+    gwas_pattern = '/home/emountjoy_statgen/data/sumstats/gwas/*.parquet'
+    mol_pattern = '/home/emountjoy_statgen/data/sumstats/molecular_trait/*.parquet'
 
     # Load GWAS dfs
     gwas_dfs = []
@@ -37,6 +37,7 @@ def main():
             spark.read.parquet(inf)
                 .withColumn('pval_threshold', lit(gwas_pval_threshold))
                 .withColumn('input_name', lit(inf))
+                .withColumn('Biofeature', lit(None))
         )
         gwas_dfs.append(df)
     
