@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-CROMWELL_JAR=/Users/em21/software/cromwell/cromwell-38.jar
+CROMWELL_JAR=/home/emountjoy_statgen/software/cromwell/cromwell-38.jar
 
 # Run cromwell
 mkdir -p logs
