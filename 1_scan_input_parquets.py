@@ -37,7 +37,6 @@ def main():
             spark.read.parquet(inf)
                 .withColumn('pval_threshold', lit(gwas_pval_threshold))
                 .withColumn('input_name', lit(inf))
-                .withColumn('Biofeature', lit(None))
         )
         gwas_dfs.append(df)
     
