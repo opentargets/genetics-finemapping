@@ -16,15 +16,15 @@ def main():
     # Args
     input_json = glob('tmp/filtered_input.json/*.json')[0]
     out_manifest = 'configs/input_files.config.tsv'
-    # valid_chrom = set([str(chrom) for chrom in range(1, 23)])
-    valid_chrom = set(['22'])
+    valid_chrom = set([str(chrom) for chrom in range(1, 23)])
+    # valid_chrom = set(['22'])
     method = 'conditional'
 
     # Path patterns
-    out_path = '/Users/em21/Projects/genetics-finemapping/output/study_id={0}/phenotype_id={1}/biofeature={2}/chrom={3}'
-    log_path = '/Users/em21/Projects/genetics-finemapping/logs/study_id={0}/phenotype_id={1}/biofeature={2}/chrom={3}'
-    tmp_path = '/Users/em21/Projects/genetics-finemapping/tmp/study_id={0}/phenotype_id={1}/biofeature={2}/chrom={3}'
-    ld_ref = '/Users/em21/Projects/reference_data/uk10k_2019Feb/3_liftover_to_GRCh38/output/{chrom}.ALSPAC_TWINSUK.maf01.beagle.csq.shapeit.20131101'
+    out_path = '/home/emountjoy_statgen/genetics-finemapping/output/study_id={0}/phenotype_id={1}/biofeature={2}/chrom={3}'
+    log_path = '/home/emountjoy_statgen/genetics-finemapping/logs/study_id={0}/phenotype_id={1}/biofeature={2}/chrom={3}'
+    tmp_path = '/home/emountjoy_statgen/genetics-finemapping/tmp/study_id={0}/phenotype_id={1}/biofeature={2}/chrom={3}'
+    ld_ref = '/home/emountjoy_statgen/data/uk10k/{chrom}.ALSPAC_TWINSUK.maf01.beagle.csq.shapeit.20131101'
     
     # Create manifest
     manifest = []
