@@ -4,13 +4,15 @@
 
 # set -euo pipefail
 
+sudo apt-get install unzip
+
 # Install cromwell
 cd $HOME
 mkdir -p software/cromwell
 cd software/cromwell
-wget https://github.com/broadinstitute/cromwell/releases/download/36/cromwell-36.jar
-wget https://github.com/broadinstitute/cromwell/releases/download/36/womtool-36.jar
-echo export export CROMWELL_JAR=$PWD/cromwell-36.jar >> ~/.profile
+wget https://github.com/broadinstitute/cromwell/releases/download/38/cromwell-38.jar
+wget https://github.com/broadinstitute/cromwell/releases/download/38/womtool-38.jar
+echo export CROMWELL_JAR=$PWD/cromwell-38.jar >> ~/.profile
 . ~/.profile
 
 # Install conda

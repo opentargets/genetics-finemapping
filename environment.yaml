@@ -10,3 +10,4 @@ dependencies:
 - scipy
 - numpy
 - python-snappy
+- pyspark
