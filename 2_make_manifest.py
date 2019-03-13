@@ -15,9 +15,10 @@ def main():
 
     # Args
     input_json = glob('tmp/filtered_input.json/*.json')[0]
-    out_manifest = 'configs/input_files.config.tsv'
-    valid_chrom = set([str(chrom) for chrom in range(1, 23)])
-    # valid_chrom = set(['22'])
+    out_manifest_cromwell = 'configs/input_files.config.tsv'
+    out_json = 'configs/manifest.json'
+    # valid_chrom = set([str(chrom) for chrom in range(1, 23)])
+    valid_chrom = set(['22'])
     method = 'conditional'
 
     # Path patterns
@@ -32,6 +33,10 @@ def main():
         for in_record in in_h:
             in_record = json.loads(in_record)
             out_record = {}
+
+            # Skip if chromosome is not valid
+            if not in_record['chrom'] in valid_chrom:
+                continue
 
             # Add study identifier arguments
             out_record['type'] = in_record.get('type')
@@ -68,15 +73,21 @@ def main():
 
             manifest.append(out_record)
 
-    # Convert to a dataframe
-    df = pd.DataFrame(manifest)
-    col_order = ['type', 'in_pq', 'in_ld', 'study_id', 'phenotype_id',
-                 'biofeature', 'chrom', 'out_top_loci', 'out_credset',
-                 'out_log', 'tmpdir', 'method', 'pval_threshold']
-    df = df.loc[:, col_order]
+    # Write manifest as a json
+    with open(out_json, 'w') as out_h:
+        for record in manifest:
+            out_h.write(json.dumps(record) + '\n')
+    
+    # # Convert to a dataframe
+    # df = pd.DataFrame(manifest)
+    # col_order = ['type', 'in_pq', 'in_ld', 'study_id', 'phenotype_id',
+    #              'biofeature', 'chrom', 'out_top_loci', 'out_credset',
+    #              'out_log', 'tmpdir', 'method', 'pval_threshold']
+    # df = df.loc[:, col_order]
 
-    # Write
-    df.to_csv(out_manifest, sep='\t', header=None, index=None, na_rep='None')
+    # # Write manifest file used for cromwell WDL
+    # df.to_csv(out_manifest_cromwell, sep='\t',
+    #           header=None, index=None, na_rep='None')
 
     return 0
 
