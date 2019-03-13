@@ -60,8 +60,8 @@ def main():
             # Skip if both toploci and credset outputs exist
             if (os.path.exists(rec['out_top_loci']) and
                     os.path.exists(rec['out_credset'])):
-                continue
                 done_h.write(cmd_str + '\n')
+                continue
             else:
                 todo_h.write(cmd_str + '\n')
                 if not args.quiet:
