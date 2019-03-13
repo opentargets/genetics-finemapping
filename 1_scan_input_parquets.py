@@ -65,7 +65,6 @@ def main():
     df = (
         df.filter(col('pval') < col('pval_threshold'))
           .select('type', 'study_id', 'phenotype_id', 'biofeature', 'gene_id', 'chrom', 'pval_threshold', 'input_name')
-        #   .filter(col('chrom') == '22') # DEBUG
           .distinct()
     )
 

@@ -3,8 +3,8 @@
 
 set -euo pipefail
 
-cores=4
-instance_name="em-coloc-test"
+cores=32
+instance_name="em-finemap"
 instance_zone="europe-west1-d"
 
 python 3_make_commands.py | parallel -j $cores
