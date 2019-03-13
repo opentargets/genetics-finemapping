@@ -66,6 +66,13 @@ bash execute_workflow.test.sh
 Useful commands:
 
 ```
+# Parse time taken for each run
+find logs -name "logfile.txt" -exec grep -H "Time taken" {} \;
+```
+
+# OLD
+
+```
 # Find output directories that don't contain the expected files
 find ~/finemapping/output -mindepth 5 -maxdepth 5 -type d '!' -exec test -e "{}/top_loci.parquet" ';' -print
 find ~/finemapping/output -mindepth 5 -maxdepth 5 -type d '!' -exec test -e "{}/credible_set.parquet" ';' -print
@@ -79,8 +86,10 @@ grep -n -i error ~/finemapping/logs/study_id\=*/cell_id\=*/group_id\=*/trait_id\
 # Number of log files
 ls ~/finemapping/logs/study_id\=*/cell_id\=*/group_id\=*/trait_id\=*/chrom\=*/logfile.txt | wc -l
 
-# Remove stopped containers
-docker ps -aq --no-trunc -f status=exited | xargs docker rm
+# Count finished
+find output -name "*.json" | wc -l
+find output -name "logfile.txt" | wc -l
+
 ```
 
 # TODO

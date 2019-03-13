@@ -1,9 +1,0 @@
-{
-  "finemapping.inputManifestFile": "/home/emountjoy_statgen/genetics-finemapping/configs/input_files.config.tsv",
-  "finemapping.finemap_single_study.config_file": "/home/emountjoy_statgen/genetics-finemapping/configs/analysis.config.yaml",
-  "finemapping.finemap_single_study.script": "/home/emountjoy_statgen/genetics-finemapping/finemapping/single_study.wrapper.py",
-  "finemapping.concat_toploci.script": "/home/emountjoy_statgen/genetics-finemapping/utils/concat_json.py",
-  "finemapping.concat_toploci.out": "/home/emountjoy_statgen/genetics-finemapping/output/top_loci.json.gz",
-  "finemapping.concat_credset.script": "/home/emountjoy_statgen/genetics-finemapping/utils/concat_json.py",
-  "finemapping.concat_credset.out": "/home/emountjoy_statgen/genetics-finemapping/output/credible_sets.json.gz"
-}
