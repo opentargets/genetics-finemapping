@@ -26,10 +26,10 @@ def main():
 
     # Args
     gwas_pval_threshold = 5e-8
-    gwas_pattern = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/gwas_2/*.parquet'
-    mol_pattern = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/molecular_trait_2/*.parquet'
-    # gwas_pattern = '/home/emountjoy_statgen/data/sumstats/gwas/*.parquet'
-    # mol_pattern = '/home/emountjoy_statgen/data/sumstats/molecular_trait/*.parquet'
+    # gwas_pattern = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/gwas_2/*.parquet'
+    # mol_pattern = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/molecular_trait_2/*.parquet'
+    gwas_pattern = '/home/emountjoy_statgen/data/sumstats/gwas/*.parquet'
+    mol_pattern = '/home/emountjoy_statgen/data/sumstats/molecular_trait/*.parquet'
 
     # Load GWAS dfs
     gwas_dfs = []

@@ -19,10 +19,10 @@ from glob import glob
 def main():
 
     # Args
-    # mol_pattern = '/home/emountjoy_statgen/data/sumstats/molecular_trait/*.parquet'
-    # out_dir = '/home/emountjoy_statgen/data/sumstats/molecular_trait_2/'
-    mol_pattern = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/molecular_trait/*.parquet'
-    out_dir = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/molecular_trait_2/'
+    mol_pattern = '/home/emountjoy_statgen/data/sumstats/molecular_trait/*.parquet'
+    out_dir = '/home/emountjoy_statgen/data/sumstats/molecular_trait_2/'
+    # mol_pattern = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/molecular_trait/*.parquet'
+    # out_dir = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/molecular_trait_2/'
 
     # Make spark session
     spark = (
