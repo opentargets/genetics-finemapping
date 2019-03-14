@@ -40,6 +40,11 @@ def detect_top_loci(sumstats, in_plink, temp_dir,
             logger.info('No variants with pval < p_threshold, skipping clumping...')
         # Use empty sumstats df
         top_loci = sumstats.head(0)
+    elif rows_below_threshold == 1:
+        if logger:
+            logger.info('Only 1 variant with pval < p_threshold, skipping clumping...')
+        # Use empty sumstats df
+        top_loci = sumstats.loc[sumstats['pval'] <= cojo_p, :]
     # Detect top loci using GCTA-cojo
     elif method == 'conditional':
         if logger:

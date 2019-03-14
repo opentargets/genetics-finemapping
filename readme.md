@@ -2,7 +2,7 @@ Fine-mapping pipeline
 =====================
 
 Todo:
-- write command to log
+- remove temp files option
 
 
 ### Requirements
