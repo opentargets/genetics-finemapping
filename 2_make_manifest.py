@@ -29,7 +29,7 @@ def main():
     out_path = '/home/em21/genetics-finemapping/output/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
     log_path = '/home/em21/genetics-finemapping/logs/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
     tmp_path = '/home/em21/genetics-finemapping/tmp/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
-    ld_ref = '/home/em21/data/uk10k/{chrom}.ALSPAC_TWINSUK.maf01.beagle.csq.shapeit.20131101'
+    ld_ref = '/home/em21/scratch/data/uk10k/{chrom}.ALSPAC_TWINSUK.maf01.beagle.csq.shapeit.20131101'
     
     # Create manifest
     manifest = []

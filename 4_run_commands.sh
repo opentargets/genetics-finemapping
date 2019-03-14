@@ -4,7 +4,7 @@
 set -euo pipefail
 
 cores=4
-instance_name="em-finemap-ssd"
+instance_name="em-finemap-local-ssd"
 instance_zone="europe-west1-d"
 
 python 3_make_commands.py | parallel -j $cores
