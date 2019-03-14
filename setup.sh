@@ -4,6 +4,7 @@
 
 # set -euo pipefail
 
+sudo apt-get update
 sudo apt-get install unzip
 
 # Install conda
@@ -27,6 +28,9 @@ echo export PATH="$PWD:\$PATH" >> ~/.profile
 sudo apt install -yf openjdk-8-jre-headless openjdk-8-jdk
 # sudo update-java-alternatives --list
 # sudo update-java-alternatives --set java-1.8.0-openjdk-amd64
+
+# Install parallel
+sudo apt install -yf parallel
 
 
 echo COMPLETE
