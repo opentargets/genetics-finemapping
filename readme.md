@@ -2,7 +2,8 @@ Fine-mapping pipeline
 =====================
 
 Todo:
-- change bio_feature to bio_feature
+- write command to log
+
 
 ### Requirements
 - GCTA (>= v1.91.3) must be available in `$PATH`
@@ -70,7 +71,10 @@ Useful commands:
 
 ```
 # Parse time taken for each run
-find logs -name "logfile.txt" -exec grep -H "Time taken" {} \;
+grep "Time taken" logs/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/logfile.txt
+
+# List all
+ls logs/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/logfile.txt
 ```
 
 # OLD
