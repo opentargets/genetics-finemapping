@@ -107,14 +107,14 @@ def perfrom_conditional_adjustment(sumstats,
     gcta_out = os.path.join(temp_dir, '{0}.{1}.gcta_out'.format(
         file_pref,
         index_var.replace(':', '_')))
+    gcta_cond = os.path.join(temp_dir, '{0}.{1}.cond_list.txt'.format(
+        file_pref,
+        index_var.replace(':', '_')))
 
     # Write sumstats
     sumstat_to_gcta(sumstats, gcta_in, gcta_snplist)
 
     # Write a conditional list
-    gcta_cond = os.path.join(temp_dir, '{0}.{1}.cond_list.txt'.format(
-        file_pref,
-        index_var.replace(':', '_')))
     write_cond_list(condition_on, gcta_cond)
 
     # Constuct command
