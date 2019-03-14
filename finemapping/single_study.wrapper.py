@@ -28,6 +28,7 @@ def main():
     # Start logging
     logger = make_logger(args.log)
     logger.info('Started finemapping pipeline')
+    logger.info('Printing command: \n' + sys.argv)
     logger.info('Printing args: \n' + pprint.pformat(vars(args), indent=2))
 
     # Load analysis config file

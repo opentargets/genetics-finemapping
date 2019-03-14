@@ -72,6 +72,7 @@ Useful commands:
 ```
 # Parse time taken for each run
 grep "Time taken" logs/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/logfile.txt
+ls -rt logs/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/logfile.txt | xargs grep "Time taken"
 
 # List all
 ls logs/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/logfile.txt
