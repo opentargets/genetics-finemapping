@@ -19,10 +19,10 @@ from glob import glob
 def main():
 
     # Args
-    # mol_pattern = '/home/emountjoy_statgen/data/sumstats/molecular_trait/*.parquet'
-    # out_dir = '/home/emountjoy_statgen/data/sumstats/molecular_trait_2/'
-    mol_pattern = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/molecular_trait/*.parquet'
-    out_dir = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/molecular_trait_2/'
+    # mol_pattern = '/home/emountjoy_statgen/data/sumstats/gwas/*.parquet'
+    # out_dir = '/home/emountjoy_statgen/data/sumstats/gwas_2/'
+    mol_pattern = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/gwas/*.parquet'
+    out_dir = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/gwas_2/'
 
     # Make spark session
     spark = (
@@ -38,12 +38,17 @@ def main():
         # Load
         df = spark.read.parquet(inf)
 
+        # Rename bio_feature
+        df = (
+            df.withColumn('bio_feature', col('biofeature'))
+              .drop('biofeature')
+        )
+
         # Write
         outf = os.path.join(out_dir, os.path.basename(inf))
         (
             df
             .write
-            .partitionBy('bio_feature', 'chrom')
             .parquet(
                 outf,
                 mode='overwrite',

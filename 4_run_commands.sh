@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-cores=32
+cores=4
 instance_name="em-finemap"
 instance_zone="europe-west1-d"
 

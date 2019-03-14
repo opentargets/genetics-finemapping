@@ -10,13 +10,13 @@ python finemapping/single_study.wrapper.py \
   --config_file 'configs/analysis.config.yaml' \
   --study_id 'CEDAR' \
   --phenotype_id 'ILMN_1690982' \
-  --biofeature 'MONOCYTE_CD14' \
+  --bio_feature 'MONOCYTE_CD14' \
   --type 'eqtl' \
   --chrom '22' \
   --method 'conditional' \
   --pval_threshold 1e-5 \
-  --toploci 'output/study_id=CEDAR/phenotype_id=ILMN_1690982/biofeature=MONOCYTE_CD14/chrom=22/top_loci.json.gz' \
-  --credset 'output/study_id=CEDAR/phenotype_id=ILMN_1690982/biofeature=MONOCYTE_CD14/chrom=22/credible_set.json.gz' \
-  --tmpdir 'tmp/study_id=CEDAR/phenotype_id=ILMN_1690982/biofeature=MONOCYTE_CD14/chrom=22/' \
-  --log 'logs/study_id=CEDAR/phenotype_id=ILMN_1690982/biofeature=MONOCYTE_CD14/chrom=22/logfile.txt'
+  --toploci 'output/study_id=CEDAR/phenotype_id=ILMN_1690982/bio_feature=MONOCYTE_CD14/chrom=22/top_loci.json.gz' \
+  --credset 'output/study_id=CEDAR/phenotype_id=ILMN_1690982/bio_feature=MONOCYTE_CD14/chrom=22/credible_set.json.gz' \
+  --tmpdir 'tmp/study_id=CEDAR/phenotype_id=ILMN_1690982/bio_feature=MONOCYTE_CD14/chrom=22/' \
+  --log 'logs/study_id=CEDAR/phenotype_id=ILMN_1690982/bio_feature=MONOCYTE_CD14/chrom=22/logfile.txt'
 

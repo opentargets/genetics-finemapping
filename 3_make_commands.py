@@ -45,7 +45,7 @@ def main():
                 '--config_file', os.path.abspath(analysis_config),
                 '--study_id', rec['study_id'],
                 '--phenotype_id', rec['phenotype_id'],
-                '--biofeature', rec['biofeature'],
+                '--bio_feature', rec['bio_feature'],
                 '--type', rec['type'],
                 '--chrom', rec['chrom'],
                 '--method', rec['method'],

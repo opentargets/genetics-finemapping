@@ -4,162 +4,86 @@
 # Ed Mountjoy
 #
 
-import pyspark.sql
-from pyspark.sql.functions import col
+import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
 import os
 
-# import dask.dataframe as dd
-# def load_sumstats(in_pq, study_id, phenotype_id=None, biofeature=None,
-#                   chrom=None, excl_mhc=None, min_maf=None, logger=None):
-#     ''' Loads summary statistics from Open Targets parquet format using dask:
-#         - Loads only required rows
-#         - Converts to pandas
-#         - TODO only extract required columns
-#         - TODO extract eaf
-#     Args:
-#         excl_mhc (b37|b38|None): whether to exclude the MHC region
-#     '''
-
-#     #
-#     # Load
-#     #
-
-#     # Create row-group filters
-#     row_grp_filters = [('study_id', '==', study_id)]
-#     if phenotype_id:
-#         row_grp_filters.append(('phenotype_id', '==', phenotype_id))
-#     if chrom:
-#         row_grp_filters.append(('chrom', '==', str(chrom)))
-
-#     # Add biofeature to path
-#     if biofeature:
-#         in_pq = os.path.join(in_pq, 'biofeature={}'.format(biofeature))
-
-#     # Create column filters
-#     cols_to_keep = ['study_id', 'phenotype_id', 'chrom', 'pos',
-#                     'ref', 'alt', 'beta', 'se', 'pval', 'n_total', 'n_cases',
-#                     'eaf', 'is_cc']
-
-#     # Read file
-#     in_pq_pattern = os.path.join(in_pq, '*.parquet')
-#     df = dd.read_parquet(in_pq_pattern,
-#                          columns=cols_to_keep,
-#                          filters=row_grp_filters,
-#                          engine='fastparquet')
-
-#     # Conversion to in-memory pandas
-#     df = df.compute(scheduler='single-threaded')
-#     df = df.astype(dtype=get_meta_info(type='sumstats'))
-
-#     # Apply row filters
-#     query_parts = []
-#     for part in row_grp_filters:
-#         if isinstance(part[2], int):
-#             query_parts.append('{} {} {}'.format(part[0], part[1], part[2]))
-#         else:
-#             query_parts.append('{} {} "{}"'.format(part[0], part[1], part[2]))
-#     query = ' & '.join(query_parts)
-#     df = df.query(query)
-
-#     # Add biofeature back in
-#     df.loc[:, 'biofeature'] = biofeature
-
-#     #
-#     # Make exclusions
-#     #
-
-#     # Exclude on MAF
-#     if min_maf:
-#         to_exclude = ( df['eaf'].apply(eaf_to_maf) < min_maf )
-#         df = df.loc[~to_exclude, :]
-
-#     # Exclude MHC
-#     if excl_mhc and (df.chrom == '6').any():
-#         # Exclude MHC
-#         if excl_mhc == 'b37':
-#             is_mhc = ( (df['chrom'] == '6') &
-#                        (df['pos_b37'] >= 28477797) &
-#                        (df['pos_b37'] <= 33448354) )
-#             df = df.loc[~is_mhc, :]
-#         elif excl_mhc == 'b38':
-#             is_mhc = ( (df['chrom'] == '6') &
-#                        (df['pos_b38'] >= 28510120) &
-#                        (df['pos_b38'] <= 33480577) )
-#             df = df.loc[~is_mhc, :]
-    
-#     # Create a variant ID
-#     df['variant_id'] = (
-#         df.loc[:, ['chrom', 'pos', 'ref', 'alt']]
-#         .apply(lambda row: ':'.join([str(x) for x in row]), axis=1)
-#     )
-
-#     return df
-
-
-def load_sumstats(in_pq, study_id, phenotype_id=None, biofeature=None,
+def load_sumstats(in_pq, study_id, phenotype_id=None, bio_feature=None,
                   chrom=None, excl_mhc=None, min_maf=None, logger=None):
-    ''' Loads summary statistics from Open Targets parquet format using Spark
+    ''' Loads summary statistics from Open Targets parquet format using dask:
+        - Loads only required rows
+        - Converts to pandas
+        - TODO only extract required columns
+        - TODO extract eaf
+    Args:
+        excl_mhc (b37|b38|None): whether to exclude the MHC region
     '''
 
-    # Get spark session
-    spark = (
-        pyspark.sql
-        .SparkSession
-        .builder
-        .master("local")
-        .getOrCreate()
-    )
+    #
+    # Load
+    #
+
+    # Create row-group filters
+    row_grp_filters = [('study_id', '==', study_id)]
+    if bio_feature:
+        row_grp_filters.append(('bio_feature', '==', bio_feature))
+    if phenotype_id:
+        row_grp_filters.append(('phenotype_id', '==', phenotype_id))
+    if chrom:
+        row_grp_filters.append(('chrom', '==', str(chrom)))
 
     # Create column filters
-    cols_to_keep = ['study_id', 'phenotype_id', 'biofeature', 'chrom', 'pos',
+    cols_to_keep = ['study_id', 'phenotype_id', 'bio_feature', 'chrom', 'pos',
                     'ref', 'alt', 'beta', 'se', 'pval', 'n_total', 'n_cases',
                     'eaf', 'is_cc']
 
-    # Load
-    df_spark = (
-        spark.read.parquet(in_pq)
-        .select(cols_to_keep)
+    # Read file
+    df = dd.read_parquet(in_pq,
+                         columns=cols_to_keep,
+                         filters=row_grp_filters,
+                         engine='fastparquet')
+
+    # Conversion to in-memory pandas
+    df = (
+        df.compute(scheduler='single-threaded')
+          .astype(dtype=get_meta_info(type='sumstats'))
     )
 
-    # Apply required filters
-    df_spark = (
-        df_spark.filter(
-            (col('study_id') == study_id) &
-            (col('chrom') == chrom)
-        )
-    )
-
-    # Apply optional filters
+    # Apply row filters
+    if study_id:
+        df = df.loc[df['study_id'] == study_id, :]
+    if bio_feature:
+        df = df.loc[df['bio_feature'] == bio_feature, :]
     if phenotype_id:
-        df_spark = df_spark.filter(col('phenotype_id') == phenotype_id)
-    if biofeature:
-        df_spark = df_spark.filter(col('biofeature') == biofeature)
+        df = df.loc[df['phenotype_id'] == phenotype_id, :]
+    if chrom:
+        df = df.loc[df['chrom'] == chrom, :]
 
-    # Convert to pandas
-    df = df_spark.toPandas()
+    #
+    # Make exclusions
+    #
 
     # Exclude on MAF
     if min_maf:
-        to_exclude = (df['eaf'].apply(eaf_to_maf) < min_maf)
+        to_exclude = ( df['eaf'].apply(eaf_to_maf) < min_maf )
         df = df.loc[~to_exclude, :]
-    
+
     # Exclude MHC
     if excl_mhc and (df.chrom == '6').any():
         # Exclude MHC
         if excl_mhc == 'b37':
             is_mhc = ( (df['chrom'] == '6') &
-                       (df['pos'] >= 28477797) &
-                       (df['pos'] <= 33448354) )
+                       (df['pos_b37'] >= 28477797) &
+                       (df['pos_b37'] <= 33448354) )
             df = df.loc[~is_mhc, :]
         elif excl_mhc == 'b38':
             is_mhc = ( (df['chrom'] == '6') &
-                       (df['pos'] >= 28510120) &
-                       (df['pos'] <= 33480577) )
+                       (df['pos_b38'] >= 28510120) &
+                       (df['pos_b38'] <= 33480577) )
             df = df.loc[~is_mhc, :]
-
+    
     # Create a variant ID
     df['variant_id'] = (
         df.loc[:, ['chrom', 'pos', 'ref', 'alt']]
@@ -167,6 +91,77 @@ def load_sumstats(in_pq, study_id, phenotype_id=None, biofeature=None,
     )
 
     return df
+
+# import pyspark.sql
+# from pyspark.sql.functions import col
+# def load_sumstats(in_pq, study_id, phenotype_id=None, bio_feature=None,
+#                   chrom=None, excl_mhc=None, min_maf=None, logger=None):
+#     ''' Loads summary statistics from Open Targets parquet format using Spark
+#     '''
+
+#     # Get spark session
+#     spark = (
+#         pyspark.sql
+#         .SparkSession
+#         .builder
+#         .master("local")
+#         .getOrCreate()
+#     )
+
+#     # Create column filters
+#     cols_to_keep = ['study_id', 'phenotype_id', 'bio_feature', 'chrom', 'pos',
+#                     'ref', 'alt', 'beta', 'se', 'pval', 'n_total', 'n_cases',
+#                     'eaf', 'is_cc']
+
+#     # Load
+#     df_spark = (
+#         spark.read.parquet(in_pq)
+#         .select(cols_to_keep)
+#     )
+
+#     # Apply required filters
+#     df_spark = (
+#         df_spark.filter(
+#             (col('study_id') == study_id) &
+#             (col('chrom') == chrom)
+#         )
+#     )
+
+#     # Apply optional filters
+#     if phenotype_id:
+#         df_spark = df_spark.filter(col('phenotype_id') == phenotype_id)
+#     if bio_feature:
+#         df_spark = df_spark.filter(col('bio_feature') == bio_feature)
+
+#     # Convert to pandas
+#     df = df_spark.toPandas()
+
+#     # Exclude on MAF
+#     if min_maf:
+#         to_exclude = (df['eaf'].apply(eaf_to_maf) < min_maf)
+#         df = df.loc[~to_exclude, :]
+    
+#     # Exclude MHC
+#     if excl_mhc and (df.chrom == '6').any():
+#         # Exclude MHC
+#         if excl_mhc == 'b37':
+#             is_mhc = ( (df['chrom'] == '6') &
+#                        (df['pos'] >= 28477797) &
+#                        (df['pos'] <= 33448354) )
+#             df = df.loc[~is_mhc, :]
+#         elif excl_mhc == 'b38':
+#             is_mhc = ( (df['chrom'] == '6') &
+#                        (df['pos'] >= 28510120) &
+#                        (df['pos'] <= 33480577) )
+#             df = df.loc[~is_mhc, :]
+
+#     # Create a variant ID
+#     df['variant_id'] = (
+#         df.loc[:, ['chrom', 'pos', 'ref', 'alt']]
+#         .apply(lambda row: ':'.join([str(x) for x in row]), axis=1)
+#     )
+
+#     return df
 
 def eaf_to_maf(eaf):
     ''' Convert effect allele frequency to MAF
@@ -203,7 +198,7 @@ def get_credset_out_columns():
     return OrderedDict([
         ('study_id', 'study_id'),
         ('phenotype_id', 'phenotype_id'),
-        ('biofeature', 'biofeature'),
+        ('bio_feature', 'bio_feature'),
         ('lead_variant_id', 'lead_variant_id'),
         ('lead_chrom', 'lead_chrom'),
         ('lead_pos', 'lead_pos'),
@@ -237,7 +232,7 @@ def get_toploci_out_columns():
     return OrderedDict([
         ('study_id', 'study_id'),
         ('phenotype_id', 'phenotype_id'),
-        ('biofeature', 'biofeature'),
+        ('bio_feature', 'bio_feature'),
         ('variant_id', 'variant_id'),
         ('chrom', 'chrom'),
         ('pos', 'pos'),
@@ -258,7 +253,7 @@ def get_meta_info(type):
         meta = {
             'study_id': 'object',
             'phenotype_id': 'object',
-            'biofeature': 'object',
+            'bio_feature': 'object',
             'variant_id': 'object',
             'chrom': 'object',
             'pos': 'int64',
@@ -273,7 +268,7 @@ def get_meta_info(type):
         meta = {
             'study_id': 'object',
             'phenotype_id': 'object',
-            'biofeature': 'object',
+            'bio_feature': 'object',
             'lead_variant_id': 'object',
             'lead_chrom': 'object',
             'lead_pos': 'int64',
@@ -301,8 +296,8 @@ def get_meta_info(type):
         meta = {
             'study_id': 'object',
             'phenotype_id': 'object',
-            # 'biofeature': 'object',
-            'chrom': 'object',
+            'bio_feature': 'object',
+            'chrom': 'str',
             'pos': 'int64',
             'ref': 'object',
             'alt': 'object',

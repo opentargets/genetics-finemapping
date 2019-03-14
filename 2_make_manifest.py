@@ -22,10 +22,14 @@ def main():
     method = 'conditional'
 
     # Path patterns
-    out_path = '/home/emountjoy_statgen/genetics-finemapping/output/study_id={0}/phenotype_id={1}/biofeature={2}/chrom={3}'
-    log_path = '/home/emountjoy_statgen/genetics-finemapping/logs/study_id={0}/phenotype_id={1}/biofeature={2}/chrom={3}'
-    tmp_path = '/home/emountjoy_statgen/genetics-finemapping/tmp/study_id={0}/phenotype_id={1}/biofeature={2}/chrom={3}'
-    ld_ref = '/home/emountjoy_statgen/data/uk10k/{chrom}.ALSPAC_TWINSUK.maf01.beagle.csq.shapeit.20131101'
+    out_path = '/Users/em21/Projects/genetics-finemapping/output/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
+    log_path = '/Users/em21/Projects/genetics-finemapping/logs/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
+    tmp_path = '/Users/em21/Projects/genetics-finemapping/tmp/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
+    ld_ref = '/Users/em21/Projects/reference_data/uk10k_2019Feb/3_liftover_to_GRCh38/output/{chrom}.ALSPAC_TWINSUK.maf01.beagle.csq.shapeit.20131101'
+    # out_path = '/home/emountjoy_statgen/genetics-finemapping/output/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
+    # log_path = '/home/emountjoy_statgen/genetics-finemapping/logs/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
+    # tmp_path = '/home/emountjoy_statgen/genetics-finemapping/tmp/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
+    # ld_ref = '/home/emountjoy_statgen/data/uk10k/{chrom}.ALSPAC_TWINSUK.maf01.beagle.csq.shapeit.20131101'
     
     # Create manifest
     manifest = []
@@ -42,7 +46,7 @@ def main():
             out_record['type'] = in_record.get('type')
             out_record['study_id'] = in_record.get('study_id')
             out_record['phenotype_id'] = in_record.get('phenotype_id', None)
-            out_record['biofeature'] = in_record.get('biofeature', None)
+            out_record['bio_feature'] = in_record.get('bio_feature', None)
             out_record['chrom'] = in_record.get('chrom')
 
             # Add input files
@@ -52,19 +56,19 @@ def main():
             # Add output files
             out_record['out_top_loci'] = out_path.format(
                 out_record['study_id'], out_record['phenotype_id'],
-                out_record['biofeature'], out_record['chrom']
+                out_record['bio_feature'], out_record['chrom']
             ) + '/top_loci.json.gz'
             out_record['out_credset'] = out_path.format(
                 out_record['study_id'], out_record['phenotype_id'],
-                out_record['biofeature'], out_record['chrom']
+                out_record['bio_feature'], out_record['chrom']
             ) + '/credible_set.json.gz'
             out_record['out_log'] = log_path.format(
                 out_record['study_id'], out_record['phenotype_id'],
-                out_record['biofeature'], out_record['chrom']
+                out_record['bio_feature'], out_record['chrom']
             ) + '/logfile.txt'
             out_record['tmpdir'] = tmp_path.format(
                 out_record['study_id'], out_record['phenotype_id'],
-                out_record['biofeature'], out_record['chrom']
+                out_record['bio_feature'], out_record['chrom']
             )
 
             # Add method
@@ -81,7 +85,7 @@ def main():
     # # Convert to a dataframe
     # df = pd.DataFrame(manifest)
     # col_order = ['type', 'in_pq', 'in_ld', 'study_id', 'phenotype_id',
-    #              'biofeature', 'chrom', 'out_top_loci', 'out_credset',
+    #              'bio_feature', 'chrom', 'out_top_loci', 'out_credset',
     #              'out_log', 'tmpdir', 'method', 'pval_threshold']
     # df = df.loc[:, col_order]
 
