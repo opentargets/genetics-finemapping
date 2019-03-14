@@ -17,8 +17,8 @@ def main():
     input_json = glob('tmp/filtered_input.json/*.json')[0]
     out_manifest_cromwell = 'configs/input_files.config.tsv'
     out_json = 'configs/manifest.json'
-    # valid_chrom = set([str(chrom) for chrom in range(1, 23)])
-    valid_chrom = set(['22'])
+    valid_chrom = set([str(chrom) for chrom in range(1, 23)])
+    # valid_chrom = set(['22'])
     method = 'conditional'
 
     # Path patterns
