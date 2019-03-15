@@ -75,13 +75,13 @@ def load_sumstats(in_pq, study_id, phenotype_id=None, bio_feature=None,
         # Exclude MHC
         if excl_mhc == 'b37':
             is_mhc = ( (df['chrom'] == '6') &
-                       (df['pos_b37'] >= 28477797) &
-                       (df['pos_b37'] <= 33448354) )
+                       (df['pos'] >= 28477797) &
+                       (df['pos'] <= 33448354) )
             df = df.loc[~is_mhc, :]
         elif excl_mhc == 'b38':
             is_mhc = ( (df['chrom'] == '6') &
-                       (df['pos_b38'] >= 28510120) &
-                       (df['pos_b38'] <= 33480577) )
+                       (df['pos'] >= 28510120) &
+                       (df['pos'] <= 33480577) )
             df = df.loc[~is_mhc, :]
     
     # Create a variant ID
