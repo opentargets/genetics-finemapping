@@ -15,17 +15,19 @@ def main():
 
     # Args
     input_json = glob('tmp/filtered_input.json/*.json')[0]
-    out_manifest_cromwell = 'configs/input_files.config.tsv'
+    # out_manifest_cromwell = 'configs/input_files.config.tsv'
     out_json = 'configs/manifest.json'
-    valid_chrom = set([str(chrom) for chrom in range(1, 23)])
-    # valid_chrom = set(['22'])
+    # valid_chrom = set([str(chrom) for chrom in range(1, 23)])
+    valid_chrom = set(['22'])
     method = 'conditional'
 
-    # Path patterns
+    # Path patterns (local)
     # out_path = '/Users/em21/Projects/genetics-finemapping/output/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
     # log_path = '/Users/em21/Projects/genetics-finemapping/logs/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
     # tmp_path = '/Users/em21/Projects/genetics-finemapping/tmp/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
     # ld_ref = '/Users/em21/Projects/reference_data/uk10k_2019Feb/3_liftover_to_GRCh38/output/{chrom}.ALSPAC_TWINSUK.maf01.beagle.csq.shapeit.20131101'
+    
+    # Path patterns (server)
     out_path = '/home/em21/genetics-finemapping/output/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
     log_path = '/home/em21/genetics-finemapping/logs/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
     tmp_path = '/home/em21/genetics-finemapping/tmp/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
