@@ -3,6 +3,7 @@ Fine-mapping pipeline
 
 Todo:
 - remove temp files option
+- remove pos_37 pos_38
 
 
 ### Requirements
@@ -117,5 +118,5 @@ find output -name "logfile.txt" | wc -l
 For readme:
 
 - Manifest NAs must be represented with "None"
-- Requirements for input files, e.g. if bio_feature not Null, it should be (Hive) paritioned by this field
+- Requirements for input files, e.g. if bio_feature not Null, it should be (Hive) paritioned by this field and chrom
 - P-value threshold is specified in 1_scan_input_parquets.py. Set to 5e-8 for GWAS, and (0.05 / num_tests) for mol trait
