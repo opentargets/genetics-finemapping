@@ -20,7 +20,12 @@ from glob import glob
 def main():
 
     # Make spark session
-    spark = pyspark.sql.SparkSession.builder.getOrCreate()
+    # Using `ignoreCorruptFiles` will skip empty files
+    spark = (
+        pyspark.sql.SparkSession.builder
+        .config("spark.sql.files.ignoreCorruptFiles", "true")
+        .getOrCreate()
+    )
     # sc = spark.sparkContext
     print('Spark version: ', spark.version)
 
