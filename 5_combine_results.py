@@ -34,6 +34,8 @@ def main():
     (
         spark.read.json(in_top_loci_pattern)
         .coalesce(1)
+        .orderBy('study_id', 'phenotype_id', 'bio_feature',
+                 'chrom', 'pos')
         .write.json(out_top_loci,
                     compression='gzip',
                     mode='overwrite')
@@ -48,17 +50,14 @@ def main():
     # Process cred set
     (
         spark.read.json(in_credset_pattern)
-        .coalesce(1)
+        .repartitionByRange('study_id', 'phenotype_id', 'bio_feature',
+                            'lead_chrom', 'lead_pos')
         .write.json(out_credset,
                     compression='gzip',
                     mode='overwrite')
     )
     
-    # Copy to single file
-    copyfile(
-        glob(out_credset + '/part-*.json.gz')[0],
-        out_credset + '.json.gz'
-    )
+
 
     return 0
 
