@@ -28,14 +28,14 @@ def main():
     gwas_pval_threshold = 0.05
 
     # Paths (local)
-    gwas_pattern = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/gwas_2/*.parquet'
-    mol_pattern = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/molecular_trait_2/*.parquet'
-    out_path = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats_filtered'
+    # gwas_pattern = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/gwas_2/*.parquet'
+    # mol_pattern = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/molecular_trait_2/*.parquet'
+    # out_path = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats_filtered'
 
     # Paths (server)
-    # gwas_pattern = '/home/em21/scratch/data/sumstats/gwas_2/*.parquet'
-    # mol_pattern = '/home/em21/scratch/data/sumstats/molecular_trait_2/*.parquet'
-    # out_path = '/home/em21/scratch/data/sumstats_filtered'
+    gwas_pattern = '/home/em21/data/sumstats/gwas_2/*.parquet'
+    mol_pattern = '/home/em21/data/sumstats/molecular_trait_2/*.parquet'
+    out_path = '/home/em21/data/sumstats_filtered'
 
     # Load GWAS dfs
     gwas_dfs = []
