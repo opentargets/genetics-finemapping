@@ -63,13 +63,15 @@ def main():
         args.toploci,
         orient='records',
         lines=True,
-        compression='gzip'
+        compression='gzip',
+        double_precision=15
     )
     credset_results.to_json(
         args.credset,
         orient='records',
         lines=True,
-        compression='gzip'
+        compression='gzip',
+        double_precision=15
     )
 
     # # As parquet
