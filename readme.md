@@ -44,22 +44,13 @@ conda env create -n finemapping --file environment.yaml
 ### Usage
 
 ```
-# Start mysql server docker
-mkdir -p mysql/data
-mkdir -p mysql/init
-docker run \
-  -v /home/ubuntu/finemapping/mysql/data:/var/lib/mysql \
-  -v /home/ubuntu/finemapping/mysql/init:/docker-entrypoint-initdb.d \
-  -p 3306:3306 \
-  --name cromwell_myself \
-  -e MYSQL_ROOT_PASSWORD=cromwell_root_password \
-  -e MYSQL_DATABASE=cromwell_db \
-  -e MYSQL_USER=cromwell_user \
-  -e MYSQL_PASSWORD=cromwell_other_password \
-  -d mysql/mysql-server:5.5
-
 # Activate environment
-source activate finemapping
+source activate finemap
+
+# Set spark paths
+export PYSPARK_SUBMIT_ARGS="--driver-memory 8g pyspark-shell"
+export SPARK_HOME=/home/ubuntu/software/spark-2.4.0-bin-hadoop2.7
+export PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-2.4.0-src.zip:$PYTHONPATH
 
 # Create input manifest
 python 1_make_input_file_manifest.py
