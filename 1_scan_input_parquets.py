@@ -32,8 +32,9 @@ def main():
     # mol_pattern = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/molecular_trait_2/*.parquet'
 
     # Paths (server)
-    gwas_pattern = '/home/em21/scratch/data/sumstats/gwas_2/*.parquet'
-    mol_pattern = '/home/em21/scratch/data/sumstats/molecular_trait_2/*.parquet'
+    gwas_pattern = '/home/ubuntu/data/sumstats/filtered/significant_window_2mb/gwas/*.parquet'
+    mol_pattern = '/home/ubuntu/data/sumstats/filtered/significant_window_2mb/molecular_trait/*.parquet'
+    out_path = '/home/ubuntu/results/finemapping/tmp/filtered_input.json'
 
     # Load GWAS dfs
     gwas_dfs = []
@@ -77,7 +78,7 @@ def main():
     # Write
     (
         df.coalesce(1)
-          .write.json('tmp/filtered_input.json',
+          .write.json(out_path,
                       mode='overwrite')
     )
 
