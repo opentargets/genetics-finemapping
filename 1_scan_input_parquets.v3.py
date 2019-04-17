@@ -40,19 +40,17 @@ def main():
     mol_pattern = '/home/ubuntu/data/sumstats/filtered/significant_window_2mb/molecular_trait/*.parquet'
     out_path = '/home/ubuntu/results/finemapping/tmp/filtered_input'
 
-    inf = os.path.abspath(inf)
     # Load GWAS dfs
     abspath = udf(os.path.abspath, StingType())
     gwas_dfs = (
         spark.read.parquet(gwas_pattern)
             .withColumn('pval_threshold', lit(gwas_pval_threshold))
-            .withColumn('input_name', abspath(inf))
+            .withColumn('input_name', abspath(input_file_name()))
     )
     
     # Load molecular trait dfs
     mol_dfs = []
     for inf in glob(mol_pattern):
-        inf = os.path.abspath(inf)
         df = (
             spark.read.parquet(inf)
             .withColumn('pval_threshold', (0.05 / col('num_tests')))
@@ -60,7 +58,7 @@ def main():
                                             col('pval_threshold'))
                         .otherwise(gwas_pval_threshold))
             .drop('num_tests')
-            .withColumn('input_name', lit(inf))
+            .withColumn('input_name', abspath(inf))
         )
         mol_dfs.append(df)
 
