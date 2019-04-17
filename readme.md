@@ -48,7 +48,7 @@ conda env create -n finemapping --file environment.yaml
 source activate finemap
 
 # Set spark paths
-export PYSPARK_SUBMIT_ARGS="--driver-memory 8g pyspark-shell"
+export PYSPARK_SUBMIT_ARGS="--driver-memory 80g pyspark-shell"
 export SPARK_HOME=/home/ubuntu/software/spark-2.4.0-bin-hadoop2.7
 export PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-2.4.0-src.zip:$PYTHONPATH
 

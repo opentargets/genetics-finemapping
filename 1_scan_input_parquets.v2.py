@@ -40,20 +40,49 @@ def main():
     mol_pattern = '/home/ubuntu/data/sumstats/filtered/significant_window_2mb/molecular_trait/*.parquet'
     out_path = '/home/ubuntu/results/finemapping/tmp/filtered_input'
 
-    # Load GWAS dfs
-    gwas_dfs = []
+    # Stop if path exists
+    if os.path.exists(out_path):
+        sys.exit('Error: output path exists {}'.format(out_path))
+
+    #
+    # Process GWAS
+    #
+
     for inf in glob(gwas_pattern):
+        
+        # Load
         inf = os.path.abspath(inf)
         df = (
             spark.read.parquet(inf)
                 .withColumn('pval_threshold', lit(gwas_pval_threshold))
                 .withColumn('input_name', lit(inf))
         )
-        gwas_dfs.append(df)
+
+        # Process
+        df = (
+            df.filter(col('pval') < col('pval_threshold'))
+            .select('type', 'study_id', 'phenotype_id', 'bio_feature', 'gene_id', 'chrom', 'pval_threshold', 'input_name')
+            .distinct()
+        )
+
+        # Save
+        (
+            df
+            .coalesce(1)
+            .write.json(out_path,
+                        compression='gzip',
+                        mode='append')
+        )
+
+        df.unpersist()
     
-    # Load molecular trait dfs
-    mol_dfs = []
+    #
+    # Process molecular traits
+    #
+
     for inf in glob(mol_pattern):
+
+        # Load
         inf = os.path.abspath(inf)
         df = (
             spark.read.parquet(inf)
@@ -64,31 +93,22 @@ def main():
             .drop('num_tests')
             .withColumn('input_name', lit(inf))
         )
-        mol_dfs.append(df)
+        
+        # Process
+        df = (
+            df.filter(col('pval') < col('pval_threshold'))
+            .select('type', 'study_id', 'phenotype_id', 'bio_feature', 'gene_id', 'chrom', 'pval_threshold', 'input_name')
+            .distinct()
+        )
 
-    # Take union
-    df = reduce(
-        pyspark.sql.DataFrame.unionByName,
-        gwas_dfs + mol_dfs
-    )
-    
-    # Process
-    df = (
-        df.filter(col('pval') < col('pval_threshold'))
-          .select('type', 'study_id', 'phenotype_id', 'bio_feature', 'gene_id', 'chrom', 'pval_threshold', 'input_name')
-          .distinct()
-    )
-
-    # Write
-    (
-        df
-        #   .coalesce(1)
-          .write.json(out_path,
-                      compression='gzip',
-                      mode='overwrite')
-    )
-
-    # input_file_name
+        # Save
+        (
+            df
+            .coalesce(1)
+            .write.json(out_path,
+                        compression='gzip',
+                        mode='append')
+        )
 
     return 0
 
