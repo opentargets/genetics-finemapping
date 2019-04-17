@@ -20,7 +20,11 @@ from functools import reduce
 def main():
 
     # Make spark session
-    spark = pyspark.sql.SparkSession.builder.getOrCreate()
+    spark = (
+        pyspark.sql.SparkSession.builder
+        .config("spark.driver.maxResultSize", "10G")
+        .getOrCreate()
+    )
     # sc = spark.sparkContext
     print('Spark version: ', spark.version)
 
