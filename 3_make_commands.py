@@ -10,31 +10,30 @@ import os
 import sys
 import json
 import argparse
-# from pprint import pprint
+import gzip
 
 def main():
 
     # Args
     args = parse_args()
-    in_manifest = 'configs/manifest.json'
-    out_todo = 'commands_todo.txt'
-    out_done = 'commands_done.txt'
+    in_manifest = 'configs/manifest.json.gz'
+    out_todo = 'commands_todo.txt.gz'
+    out_done = 'commands_done.txt.gz'
 
     # Pipeline args
     script = 'finemapping/single_study.wrapper.py'
     analysis_config = 'configs/analysis.config.yaml'
 
     # Open command files
-    todo_h = open(out_todo, 'w')
-    done_h = open(out_done, 'w')
+    todo_h = gzip.open(out_todo, 'w')
+    done_h = gzip.open(out_done, 'w')
     
     # Iterate over manifest
-    with open(in_manifest, 'r') as in_mani:
+    with gzip.open(in_manifest, 'r') as in_mani:
         for line in in_mani:
 
             # Parse
-            rec = json.loads(line.rstrip())
-            # pprint(rec)
+            rec = json.loads(line.decode().rstrip())
 
             # Build command
             cmd = [
@@ -60,10 +59,10 @@ def main():
             # Skip if both toploci and credset outputs exist
             if (os.path.exists(rec['out_top_loci']) and
                     os.path.exists(rec['out_credset'])):
-                done_h.write(cmd_str + '\n')
+                done_h.write((cmd_str + '\n').encode())
                 continue
             else:
-                todo_h.write(cmd_str + '\n')
+                todo_h.write((cmd_str + '\n').encode())
                 if not args.quiet:
                     print(cmd_str)
     

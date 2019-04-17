@@ -24,6 +24,7 @@ def main():
     spark = (
         pyspark.sql.SparkSession.builder
         .config("spark.sql.files.ignoreCorruptFiles", "true")
+        .config("spark.master", "local[*]")
         .getOrCreate()
     )
     # sc = spark.sparkContext

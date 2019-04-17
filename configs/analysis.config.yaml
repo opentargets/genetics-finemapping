@@ -16,4 +16,4 @@ cojo_wind:  2000   # (Kb) Assume SNPs outside window are in linkage equilibrium
 fm_wind: 500   # (Kb) Window around the index on which to perform credible set analysis
 
 # Credible set analysis
-pp_threshold: 0.001 # Keep any variant which is in ((95% OR 99% credible set) OR post_posterior > pp_threshold)
+pp_threshold: 0.001 # Keep any variant which is in ((95% OR 99% credible set) AND post_posterior > pp_threshold)
