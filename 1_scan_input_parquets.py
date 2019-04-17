@@ -13,7 +13,6 @@ export PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-2.4.0-src.zip:$
 import pyspark.sql
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
-import os
 from glob import glob
 from functools import reduce
 
@@ -37,11 +36,11 @@ def main():
     out_path = '/home/ubuntu/results/finemapping/tmp/filtered_input'
 
     # Load GWAS dfs
-    abspath = udf(os.path.abspath, StringType())
+    strip_path = udf(lamdba x: x.replace('file:', ''), StringType())
     gwas_dfs = (
         spark.read.parquet(gwas_pattern)
             .withColumn('pval_threshold', lit(gwas_pval_threshold))
-            .withColumn('input_name', abspath(input_file_name()))
+            .withColumn('input_name', strip_path(input_file_name()))
     )
     
     # Load molecular trait dfs
@@ -57,7 +56,7 @@ def main():
                                             col('pval_threshold'))
                         .otherwise(gwas_pval_threshold))
             .drop('num_tests')
-            .withColumn('input_name', abspath(lit(inf)))
+            .withColumn('input_name', strip_path(lit(inf)))
         )
         mol_dfs.append(df)
 
