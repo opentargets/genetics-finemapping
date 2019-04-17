@@ -36,7 +36,7 @@ def main():
     out_path = '/home/ubuntu/results/finemapping/tmp/filtered_input'
 
     # Load GWAS dfs
-    strip_path = udf(lamdba x: x.replace('file:', ''), StringType())
+    strip_path = udf(lambda x: x.replace('file:', ''), StringType())
     gwas_dfs = (
         spark.read.parquet(gwas_pattern)
             .withColumn('pval_threshold', lit(gwas_pval_threshold))
