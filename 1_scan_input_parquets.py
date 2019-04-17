@@ -31,30 +31,25 @@ def main():
     # Args
     gwas_pval_threshold = 5e-8
 
-    # Paths (local)
-    # gwas_pattern = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/gwas_2/*.parquet'
-    # mol_pattern = '/Users/em21/Projects/genetics-finemapping/example_data/sumstats/molecular_trait_2/*.parquet'
-
-    # Paths (server)
+    # Paths
     gwas_pattern = '/home/ubuntu/data/sumstats/filtered/significant_window_2mb/gwas/*.parquet'
     mol_pattern = '/home/ubuntu/data/sumstats/filtered/significant_window_2mb/molecular_trait/*.parquet'
     out_path = '/home/ubuntu/results/finemapping/tmp/filtered_input'
 
     # Load GWAS dfs
-    gwas_dfs = []
-    for inf in glob(gwas_pattern):
-        inf = os.path.abspath(inf)
-        df = (
-            spark.read.parquet(inf)
-                .withColumn('pval_threshold', lit(gwas_pval_threshold))
-                .withColumn('input_name', lit(inf))
-        )
-        gwas_dfs.append(df)
+    abspath = udf(os.path.abspath, StringType())
+    gwas_dfs = (
+        spark.read.parquet(gwas_pattern)
+            .withColumn('pval_threshold', lit(gwas_pval_threshold))
+            .withColumn('input_name', abspath(input_file_name()))
+    )
     
     # Load molecular trait dfs
+    # This has to be done separately, followed by unionByName as the hive
+    # parititions differ across datasets due to different tissues
+    # (bio_features) and chromosomes
     mol_dfs = []
     for inf in glob(mol_pattern):
-        inf = os.path.abspath(inf)
         df = (
             spark.read.parquet(inf)
             .withColumn('pval_threshold', (0.05 / col('num_tests')))
@@ -62,14 +57,14 @@ def main():
                                             col('pval_threshold'))
                         .otherwise(gwas_pval_threshold))
             .drop('num_tests')
-            .withColumn('input_name', lit(inf))
+            .withColumn('input_name', abspath(lit(inf)))
         )
         mol_dfs.append(df)
 
     # Take union
     df = reduce(
         pyspark.sql.DataFrame.unionByName,
-        gwas_dfs + mol_dfs
+        [gwas_dfs] + mol_dfs
     )
     
     # Process
