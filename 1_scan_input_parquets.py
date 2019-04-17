@@ -22,7 +22,7 @@ def main():
     # Make spark session
     spark = (
         pyspark.sql.SparkSession.builder
-        .config("spark.driver.maxResultSize", "10G")
+        # .config("spark.driver.maxResultSize", "10G")
         .getOrCreate()
     )
     # sc = spark.sparkContext
@@ -38,7 +38,7 @@ def main():
     # Paths (server)
     gwas_pattern = '/home/ubuntu/data/sumstats/filtered/significant_window_2mb/gwas/*.parquet'
     mol_pattern = '/home/ubuntu/data/sumstats/filtered/significant_window_2mb/molecular_trait/*.parquet'
-    out_path = '/home/ubuntu/results/finemapping/tmp/filtered_input.json'
+    out_path = '/home/ubuntu/results/finemapping/tmp/filtered_input'
 
     # Load GWAS dfs
     gwas_dfs = []
@@ -81,8 +81,10 @@ def main():
 
     # Write
     (
-        df.coalesce(1)
+        df
+        #   .coalesce(1)
           .write.json(out_path,
+                      compression='gzip',
                       mode='overwrite')
     )
 
