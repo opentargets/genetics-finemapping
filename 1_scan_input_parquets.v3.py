@@ -58,14 +58,14 @@ def main():
                                             col('pval_threshold'))
                         .otherwise(gwas_pval_threshold))
             .drop('num_tests')
-            .withColumn('input_name', abspath(inf))
+            .withColumn('input_name', abspath(lit(inf)))
         )
         mol_dfs.append(df)
 
     # Take union
     df = reduce(
         pyspark.sql.DataFrame.unionByName,
-        gwas_dfs + mol_dfs
+        [gwas_dfs] + mol_dfs
     )
     
     # Process
