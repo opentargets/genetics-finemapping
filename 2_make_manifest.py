@@ -15,7 +15,7 @@ import gzip
 def main():
 
     # Args
-    input_pattern = 'tmp/filtered_input/*.json.gz'
+    input_pattern = '/home/ubuntu/results/finemapping/tmp/filtered_input/*.json.gz'
     out_json = 'configs/manifest.json.gz'
     valid_chrom = set([str(chrom) for chrom in range(1, 23)])
     method = 'conditional'
