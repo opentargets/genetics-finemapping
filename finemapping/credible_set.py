@@ -186,7 +186,7 @@ def calc_credible_sets(data, pp_threshold):
 
     # Only keep rows that are in the 95 or 99% credible sets
     to_keep = ((data["is95_credset"] | data["is99_credset"])
-               | (data["postprob"] > pp_threshold) )
+               & (data["postprob"] > pp_threshold) )
     cred_set_res = data.loc[to_keep, :]
 
     return cred_set_res
