@@ -36,17 +36,18 @@ def main():
     out_path = '/home/ubuntu/results/finemapping/tmp/filtered_input'
 
     # Load GWAS dfs
-    strip_path = udf(lambda x: x.replace('file:', ''), StringType())
+    strip_path_gwas = udf(lambda x: x.replace('file:', '').split('/part-')[0], StringType())
     gwas_dfs = (
         spark.read.parquet(gwas_pattern)
             .withColumn('pval_threshold', lit(gwas_pval_threshold))
-            .withColumn('input_name', strip_path(input_file_name()))
+            .withColumn('input_name', strip_path_gwas(input_file_name()))
     )
     
     # Load molecular trait dfs
     # This has to be done separately, followed by unionByName as the hive
     # parititions differ across datasets due to different tissues
     # (bio_features) and chromosomes
+    strip_path_mol = udf(lambda x: x.replace('file:', ''), StringType())
     mol_dfs = []
     for inf in glob(mol_pattern):
         df = (
@@ -56,7 +57,7 @@ def main():
                                             col('pval_threshold'))
                         .otherwise(gwas_pval_threshold))
             .drop('num_tests')
-            .withColumn('input_name', strip_path(lit(inf)))
+            .withColumn('input_name', strip_path_mol(lit(inf)))
         )
         mol_dfs.append(df)
 
