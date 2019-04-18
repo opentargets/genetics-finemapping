@@ -12,6 +12,7 @@ import main as fm
 import pprint
 from datetime import datetime
 import yaml
+from shutil import rmtree
 
 def main():
 
@@ -89,6 +90,10 @@ def main():
     #     compression='snappy',
     #     index=False
     # )
+
+    # Remove temp directory
+    if args.delete_tmpdir:
+        rmtree(args.tmpdir)
 
     # Log time taken
     logger.info('Time taken: {0}'.format(
@@ -171,6 +176,9 @@ def parse_args():
                    help=("Output: temp dir"),
                    type=str,
                    required=True)
+    p.add_argument('--delete_tmpdir',
+                   help=("Remove temp dir when complete"),
+                   action='store_true')
 
 
     args = p.parse_args()

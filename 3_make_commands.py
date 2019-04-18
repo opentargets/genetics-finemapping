@@ -53,6 +53,7 @@ def main():
                 '--credset', os.path.abspath(rec['out_credset']),
                 '--tmpdir', os.path.abspath(rec['tmpdir']),
                 '--log', os.path.abspath(rec['out_log']),
+                '--delete_tmpdir'
             ]
             cmd_str = ' '.join([str(arg) for arg in cmd])
 
