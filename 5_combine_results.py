@@ -31,10 +31,10 @@ def main():
     print('Spark version: ', spark.version)
 
     # Args
-    in_top_loci_pattern = 'output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/top_loci.json.gz'
-    in_credset_pattern = 'output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/credible_set.json.gz'
-    out_top_loci = 'results/top_loci'
-    out_credset = 'results/credset'
+    in_top_loci_pattern = '/home/ubuntu/results/finemapping/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/top_loci.json.gz'
+    in_credset_pattern = '/home/ubuntu/results/finemapping/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/credible_set.json.gz'
+    out_top_loci = '/home/ubuntu/results/finemapping/results/top_loci'
+    out_credset = '/home/ubuntu/results/finemapping/results/credset'
 
     # Process top loci 
     (
