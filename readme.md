@@ -18,11 +18,11 @@ bash setup.sh
 conda env create -n finemapping --file environment.yaml
 ```
 
-### Usage
+### Configure pipeline
 
 Many of the pipeline parameters must first be specified in the analysis config file: `configs/analysis.config.yaml`
 
-#### Run a single study
+### Run a single study
 
 A single study can be fine-mapped using the single study wrapper
 
@@ -66,9 +66,9 @@ optional arguments:
 
 ```
 
-#### Running the pipeline
+### Running the pipeline
 
-##### Step 1: Prepare input data
+#### Step 1: Prepare input data
 
 [Prepare summary statistic files](https://github.com/opentargets/genetics-sumstat-data/), including ["significant" window extraction](https://github.com/opentargets/genetics-sumstat-data/tree/master/filters/significant_window_extraction) to reduce input size.
 
@@ -76,7 +76,7 @@ Prepare LD references in plink `bed|bim|fam` format, currently using [UK Biobank
 
 Download to local machine using `gsutil -m rsync`.
 
-##### Step 2: Prepare environment
+#### Step 2: Prepare environment
 
 ```
 # Activate environment
@@ -88,7 +88,7 @@ export SPARK_HOME=/home/ubuntu/software/spark-2.4.0-bin-hadoop2.7
 export PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-2.4.0-src.zip:$PYTHONPATH
 ```
 
-##### Step 3: Make manifest file
+#### Step 3: Make manifest file
 
 The manifest file specifies all analyses to be run. The manifest is a JSON lines file with each line containing the following fields:
 
@@ -125,7 +125,7 @@ python 1_scan_input_parquets.py
 python 2_make_manifest.py
 ```
 
-##### Step 4: Run pipeline
+#### Step 4: Run pipeline
 
 ```
 # Edit args in `4_run_commands.sh` then
@@ -135,9 +135,9 @@ bash 4_run_commands.sh
 # Exit tmux with Ctrl+b then d
 ```
 
-The above command will run all analyses specified in the manifest using GNU parallel. It will create two files `commands_todo.txt.gz` and `commands_done.txt.gz` showing which analyses have not yet/already been done. The pipeline can be stopped at any time and restarted without re-running commands. You can safely regenerate the `commands_*.txt.gz` commands whilst the pipeline is running using `python 3_make_commands.py --quiet`.
+The above command will run all analyses specified in the manifest using GNU parallel. It will create two files `commands_todo.txt.gz` and `commands_done.txt.gz` showing which analyses have not yet/already been done. The pipeline can be stopped at any time and restarted without repeating any completed analyses. You can safely regenerate the `commands_*.txt.gz` commands whilst the pipeline is running using `python 3_make_commands.py --quiet`.
 
-##### Step 5: Process the results
+#### Step 5: Process the results
 
 ```
 # Combine the results of all the individual analyses
