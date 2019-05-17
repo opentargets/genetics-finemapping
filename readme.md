@@ -1,7 +1,10 @@
 Fine-mapping pipeline - Open Target Genetics
 ============================================
 
-Fine-mapping pipeline for Open Targets Genetics
+Fine-mapping pipeline for Open Targets Genetics. In brief, the method is:
+1. Detect independent loci across the summary stat file using either (i) GCTA-cojo and a given plink file as an LD reference, (ii) distance based clumping. Method specified with `--method` argument.
+2. If `--method conditional`, for each independent locus condition on all other surrounding loci (configurable with `cojo_wind`).
+3. Perform approximate Bayes factor credible set analysis for each independent locus.
 
 ### Requirements
 - Spark v2.4.0
