@@ -32,5 +32,4 @@ sudo apt install -yf openjdk-8-jre-headless openjdk-8-jdk
 # Install parallel
 sudo apt install -yf parallel
 
-
 echo COMPLETE
