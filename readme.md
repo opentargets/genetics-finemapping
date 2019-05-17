@@ -1,5 +1,5 @@
-Fine-mapping pipeline - Open Target Genetics
-============================================
+Open Target Genetics fine-mapping pipeline
+==========================================
 
 Fine-mapping pipeline for Open Targets Genetics. In brief, the method is:
 1. Detect independent loci across the summary stat file using either (i) GCTA-cojo and a given plink file as an LD reference, (ii) distance based clumping. Method specified with `--method` argument.
