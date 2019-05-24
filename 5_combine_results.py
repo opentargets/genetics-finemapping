@@ -56,8 +56,8 @@ def main():
     # Process cred set
     (
         spark.read.json(in_credset_pattern)
-        .repartitionByRange('study_id', 'phenotype_id', 'bio_feature',
-                            'lead_chrom', 'lead_pos')
+        .repartitionByRange('lead_chrom', 'lead_pos')
+        .sortWithinPartitions('lead_chrom', 'lead_pos')
         .write.json(out_credset,
                     compression='gzip',
                     mode='overwrite')

@@ -64,6 +64,7 @@ def main():
     df = (
         df.filter(col('pval') < gwas_pval_threshold)
           .repartitionByRange('chrom', 'pos')
+          .sortWithinPartitions('chrom', 'pos')
     )
 
     # Write
