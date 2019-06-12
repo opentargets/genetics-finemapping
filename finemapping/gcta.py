@@ -217,7 +217,7 @@ def sumstat_to_gcta(sumstats, outf, snplist, p_threshold=None):
     outdata.to_csv(outf, sep='\t', index=None)
 
     # Save snplist
-    outdata.SNP.to_csv(snplist, index=None, header=None)
+    outdata.SNP.to_csv(snplist, index=None, header=False)
 
     return 0
 
