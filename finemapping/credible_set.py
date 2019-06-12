@@ -108,16 +108,23 @@ def run_credible_set_for_locus(
             cred_sets.shape[0], pp_threshold
             ))
 
-        # Add index variant columns
-        cred_sets.loc[:, 'lead_variant_id'] = index_info['variant_id']
-        cred_sets[['lead_chrom', 'lead_pos', 'lead_ref', 'lead_alt']] = \
-            cred_sets.lead_variant_id.str.split(':', expand=True)
+        # Script will fail if cred_sets is empty
+        if cred_sets.shape[0] > 0:
 
-        # Add column specifying method used
-        cred_sets.loc[:, 'multisignal_method'] = method
+            # Add index variant columns
+            cred_sets.loc[:, 'lead_variant_id'] = index_info['variant_id']
+            cred_sets[['lead_chrom', 'lead_pos', 'lead_ref', 'lead_alt']] = \
+                cred_sets.lead_variant_id.str.split(':', expand=True)
 
-        # Format output table
-        cred_sets = format_credset_output(cred_sets)
+            # Add column specifying method used
+            cred_sets.loc[:, 'multisignal_method'] = method
+
+            # Format output table
+            cred_sets = format_credset_output(cred_sets)
+        
+        # Else None if credible set results is empty
+        else:
+            cred_sets = None
 
     # If df is empty skip analysis
     else:
