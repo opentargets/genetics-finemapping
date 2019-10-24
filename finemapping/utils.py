@@ -43,7 +43,7 @@ def load_sumstats(in_pq, study_id, phenotype_id=None, bio_feature=None,
     df = dd.read_parquet(in_pq,
                          columns=cols_to_keep,
                          filters=row_grp_filters,
-                         engine='fastparquet')
+                         engine='pyarrow')
 
     # Conversion to in-memory pandas
     df = (

@@ -2,10 +2,10 @@ channels:
 - conda-forge
 dependencies:
 - python=3
-- dask
+- dask>=2.6.0
 - gcsfs
 - fastparquet
-- pyarrow
+- pyarrow>=0.15
 - pyyaml
 - scipy
 - numpy
