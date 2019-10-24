@@ -178,7 +178,7 @@ def calc_credible_sets(data, pp_threshold):
 
     # Calculate posterior probability for each SNP
     sum_lABF = log_sum(data["logABF"])
-    data["postprob"] = data["logABF"].apply(np.exp) / np.exp(sum_lABF)
+    data["postprob"] = (data["logABF"] - sum_lABF).apply(np.exp)
 
     # Calc cumulative sum of the posterior probabilities
     data["postprob_cumsum"] = data["postprob"].cumsum()
