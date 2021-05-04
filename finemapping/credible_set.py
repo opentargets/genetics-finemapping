@@ -35,7 +35,7 @@ def run_credible_set_for_locus(
 
     if logger:
         logger.info(
-        '- Running credible set analysis for {0}'.format(index_info['variant_id']))
+        '\n- Running credible set analysis for {0}'.format(index_info['variant_id']))
 
     temp_dir = os.path.join(temp_dir, 'credible_set')
 

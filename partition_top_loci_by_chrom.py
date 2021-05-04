@@ -15,8 +15,8 @@ import os
 def main():
 
     # Args
-    in_file = '/home/ubuntu/results/finemapping/results/top_loci.json.gz'
-    out_dir = '/home/ubuntu/results/finemapping/results/top_loci_by_chrom'
+    in_file = '/home/js29/data/finemapping/top_loci.json.gz'
+    out_dir = '/home/js29/data/finemapping/top_loci_by_chrom'
 
     # Make outdir
     os.makedirs(out_dir, exist_ok=False)

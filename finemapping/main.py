@@ -7,6 +7,7 @@
 import utils as fm_utils
 import top_loci as fm_top_loci
 import credible_set as fm_credible_set
+import finemap as finemap
 import tempfile
 import pandas as pd
 
@@ -19,6 +20,7 @@ def run_single_study(in_pq,
                      analysis_config=None,
                      tmp_dir=tempfile.gettempdir(),
                      method='conditional',
+                     run_finemap=False,
                      pval_threshold=5e-8,
                      logger=None):
     ''' Runs the top loci and credible set analysis on a single study
@@ -96,23 +98,40 @@ def run_single_study(in_pq,
     # Concat credible sets together if they exist
     if len(credset_res_list) > 0:
         credset_results = pd.concat(credset_res_list)
-    # Else creat an empty df
+    # Else create an empty df
     else:
-        credset_results = df_empty(
+        credset_results = fm_utils.df_empty(
             columns=fm_utils.get_meta_info(type='cred_set').keys(),
             dtypes=fm_utils.get_meta_info(type='cred_set').values()
         )
 
+    finemap_results = None
+    if run_finemap:
+        finemap_run_list = []
+        finemap_res_list = []
+        for index_info in top_loci.to_dict(orient='records'):
+            # Returns a name for the locus, and the SNP results from FINEMAP
+            locus_name, finemap_res = finemap.run_finemap_for_locus(
+                index_info,
+                sumstats,
+                top_loci,
+                in_plink,
+                tmp_dir,
+                finemap_run_list,
+                fm_wind=analysis_config['fm_wind'],
+                cojo_window=analysis_config['cojo_wind'],
+                pp_threshold=analysis_config['pp_threshold'],
+                logger=logger)
+            if locus_name is not None:
+                finemap_run_list.append(locus_name)
+                finemap_res_list.append(finemap_res)
+    
+        # Concat finemap results together if they exist
+        if len(finemap_res_list) > 0:
+            finemap_results = pd.concat(finemap_res_list)
+
     if logger:
         logger.info('Completed credible set analysis')
 
-    return top_loci, credset_results
+    return top_loci, credset_results, finemap_results
 
-def df_empty(columns, dtypes, index=None):
-    ''' Creat an empty df
-    '''
-    assert len(columns)==len(dtypes)
-    df = pd.DataFrame(index=index)
-    for c, d in zip(columns, dtypes):
-        df[c] = pd.Series(dtype=d)
-    return df

@@ -40,9 +40,12 @@ def load_sumstats(in_pq, study_id, phenotype_id=None, bio_feature=None,
                     'eaf', 'is_cc']
 
     # Read file
+    # gather_statistics=True seems to be necessary, otherwise get a dask
+    # error "Cannot apply filters with gather_statistics=False"
     df = dd.read_parquet(in_pq,
                          columns=cols_to_keep,
                          filters=row_grp_filters,
+                         gather_statistics=True,
                          engine='pyarrow')
 
     # Conversion to in-memory pandas
@@ -309,6 +312,26 @@ def get_meta_info(type):
             'eaf': 'float64',
             'is_cc': 'bool'
         }
+    elif type == 'finemap_snp':
+        meta = {
+            'locus_name': 'str',
+            'index': 'int64',
+            'rsid': 'str',
+            'chromosome': 'str',
+            'position': 'int64',
+            'allele1': 'str',
+            'allele2': 'str',
+            'maf': 'float64',
+            'beta': 'float64',
+            'se': 'float64',
+            'z': 'float64',
+            'prob': 'float64',
+            'log10bf': 'float64',
+            'mean': 'float64',
+            'sd': 'float64',
+            'mean_incl': 'float64',
+            'sd_incl': 'float64'
+        }
 
     return meta
 
@@ -335,3 +358,12 @@ def is_local(path):
 #                            engine='fastparquet')
 #              .drop_duplicates() )
 #     return df
+
+def df_empty(columns, dtypes, index=None):
+    ''' Creat an empty df
+    '''
+    assert len(columns)==len(dtypes)
+    df = pd.DataFrame(index=index)
+    for c, d in zip(columns, dtypes):
+        df[c] = pd.Series(dtype=d)
+    return df

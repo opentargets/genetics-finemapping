@@ -51,6 +51,7 @@ def main():
                 '--pval_threshold', rec['pval_threshold'],
                 '--toploci', os.path.abspath(rec['out_top_loci']),
                 '--credset', os.path.abspath(rec['out_credset']),
+                '--finemap', os.path.abspath(rec['out_finemap']),
                 '--tmpdir', os.path.abspath(rec['tmpdir']),
                 '--log', os.path.abspath(rec['out_log']),
                 '--delete_tmpdir'
@@ -59,7 +60,8 @@ def main():
 
             # Skip if both toploci and credset outputs exist
             if (os.path.exists(rec['out_top_loci']) and
-                    os.path.exists(rec['out_credset'])):
+                    os.path.exists(rec['out_credset']) and
+                    os.path.exists(rec['out_finemap'])):
                 done_h.write((cmd_str + '\n').encode())
                 continue
             else:

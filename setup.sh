@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Must be ran as root
+# Must be run as root
 
 # set -euo pipefail
 
@@ -16,13 +16,38 @@ echo export PATH="$HOME/miniconda/bin:\$PATH" >> ~/.profile
 
 # Install GCTA
 cd $HOME
-mkdir -p software/gcta
-cd software/gcta
-wget https://cnsgenomics.com/software/gcta/gcta_1.92.0beta3.zip
-unzip gcta_1.92.0beta3.zip
-cd gcta_1.92.0beta3
+mkdir -p ~/software/gcta
+cd ~/software/gcta
+# Note that this URL may change - old versions aren't accessible at the same URL
+wget https://cnsgenomics.com/software/gcta/bin/gcta_1.93.2beta.zip
+unzip gcta_1.93.2beta.zip
+cd gcta_1.93.2beta
 echo export PATH="$PWD:\$PATH" >> ~/.profile
 . ~/.profile
+
+# Install plink
+mkdir -p ~/software/plink
+cd ~/software/plink
+wget http://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20201019.zip
+unzip plink_linux_x86_64_20201019.zip
+echo export PATH="$PWD:\$PATH" >> ~/.profile
+. ~/.profile
+
+# Install FINEMAP
+mkdir -p ~/software/finemap
+cd ~/software/finemap
+wget http://www.christianbenner.com/finemap_v1.4_x86_64.tgz
+tar -zxf finemap_v1.4_x86_64.tgz
+ln -s finemap_v1.4_x86_64/finemap_v1.4_x86_64 finemap
+sudo apt-get install libgomp1 # Not present by default it seems
+echo export PATH="$PWD:\$PATH" >> ~/.profile
+. ~/.profile
+
+# Copy LD to VM
+#gsutil -m cp ukb_v3_chr11* gs://genetics-portal-analysis/jeremy/ukb/tmp/
+#gsutil -m cp gs://genetics-portal-analysis/jeremy/ukb/tmp/ukb_v3_chr11* ~/genetics-finemapping/data/ukb_downsampled10k/
+mkdir -p ~/genetics-finemapping/data/ukb_downsampled10k/
+gsutil -m cp -r gs://open-targets-ukbb/genotypes/ukb_v3_downsampled10k/ukb_v3_chr* ~/genetics-finemapping/data/ukb_downsampled10k/
 
 # Install JRE
 sudo apt install -yf openjdk-8-jre-headless openjdk-8-jdk

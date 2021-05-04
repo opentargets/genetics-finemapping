@@ -36,9 +36,10 @@ def main():
     with open(args.config_file, 'r') as in_h:
         config_dict = yaml.load(in_h)
     logger.info('Analysis config: \n' + pprint.pformat(config_dict, indent=2))
-
+    run_finemap = config_dict['run_finemap']
+    
     # Run
-    top_loci, credset_results = fm.run_single_study(
+    top_loci, credset_results, finemap_results = fm.run_single_study(
         in_pq=args.pq,
         in_plink=args.ld,
         study_id=args.study_id,
@@ -48,6 +49,7 @@ def main():
         analysis_config=config_dict,
         tmp_dir=args.tmpdir,
         method=args.method,
+        run_finemap=run_finemap,
         pval_threshold=args.pval_threshold,
         logger=logger
     )
@@ -74,6 +76,14 @@ def main():
         compression='gzip',
         double_precision=15
     )
+
+    if finemap_results is not None:
+        finemap_results.to_csv(
+            args.finemap,
+            sep='\t',
+            index=False,
+            compression='gzip'
+        )
 
     # # As parquet
     # top_loci.to_parquet(
@@ -154,6 +164,9 @@ def parse_args():
                    help=('P-value threshold to be considered "significant"'),
                    type=float,
                    required=True)
+    p.add_argument('--run_finemap',
+                   help=("If specified, then will also run FINEMAP"),
+                   action='store_true')
 
     # Add output file
     p.add_argument('--toploci',
@@ -164,6 +177,11 @@ def parse_args():
     p.add_argument('--credset',
                    metavar="<file>",
                    help=("Output: credible set json file"),
+                   type=str,
+                   required=True)
+    p.add_argument('--finemap',
+                   metavar="<file>",
+                   help=("Output: finemap snp probabilities file"),
                    type=str,
                    required=True)
     p.add_argument('--log',

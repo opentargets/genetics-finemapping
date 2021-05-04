@@ -3,11 +3,11 @@
 
 set -euo pipefail
 
-cores=59
+cores=8
 instance_name="em-finemapping-big"
 
-python 3_make_commands.py | shuf | parallel -j $cores
+python 3_make_commands.py | shuf | parallel -j $cores --bar --joblog logs/parallel.jobs.log
 
 echo COMPLETE
 
-openstack server suspend $instance_name
+#openstack server suspend $instance_name

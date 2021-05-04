@@ -21,17 +21,23 @@ def main():
     method = 'conditional'
 
     # Path patterns (local)
-    # out_path = '/Users/em21/Projects/genetics-finemapping/output/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
-    # log_path = '/Users/em21/Projects/genetics-finemapping/logs/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
-    # tmp_path = '/Users/em21/Projects/genetics-finemapping/tmp/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
+    #root = '/Users/em21/Projects/genetics-finemapping'
+    # out_path = root + '/output/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
+    # log_path = root + '/logs/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
+    # tmp_path = root + '/tmp/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
     # ld_ref = '/Users/em21/Projects/reference_data/uk10k_2019Feb/3_liftover_to_GRCh38/output/{chrom}.ALSPAC_TWINSUK.maf01.beagle.csq.shapeit.20131101'
     
     # Path patterns (server)
-    out_path = '/home/ubuntu/results/finemapping/output/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
-    log_path = '/home/ubuntu/results/finemapping/logs/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
-    tmp_path = '/home/ubuntu/results/finemapping/tmp/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
-    ld_ref = '/home/ubuntu/data/genotypes/ukb_v3_downsampled10k_plink/ukb_v3_chr{chrom}.downsampled10k'
-    
+    # root = '/home/ubuntu/results/finemapping'
+    # ld_ref = '/home/ubuntu/data/genotypes/ukb_v3_downsampled10k_plink/ukb_v3_chr{chrom}.downsampled10k'
+    root = '/home/js29/genetics-finemapping'
+    input_pattern = root + '/tmp/filtered_input/*.json.gz'
+    out_path = root + '/output/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
+    log_path = root + '/logs/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
+    tmp_path = root + '/tmp/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
+    #ld_ref = root + '/data/1000Genomes_phase3/EUR/EUR.{chrom}.1000Gp3.20130502'
+    ld_ref = root + '/data/ukb_v3_downsampled10k/ukb_v3_chr{chrom}.downsampled10k'
+
     # Create manifest
     manifest = []
     for in_record in read_json_records(input_pattern):
@@ -63,6 +69,10 @@ def main():
             out_record['study_id'], out_record['phenotype_id'],
             out_record['bio_feature'], out_record['chrom']
         ) + '/credible_set.json.gz'
+        out_record['out_finemap'] = out_path.format(
+            out_record['study_id'], out_record['phenotype_id'],
+            out_record['bio_feature'], out_record['chrom']
+        ) + '/finemap_snp.tsv.gz'
         out_record['out_log'] = log_path.format(
             out_record['study_id'], out_record['phenotype_id'],
             out_record['bio_feature'], out_record['chrom']
