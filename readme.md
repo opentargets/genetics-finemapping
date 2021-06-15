@@ -88,7 +88,13 @@ mkdir -p data/ukb_v3_downsampled10k
 gsutil -m rsync gs://open-targets-ukbb/genotypes/ukb_v3_downsampled10k/ $HOME/genetics-finemapping/data/ukb_v3_downsampled10k/
 
 mkdir -p $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas
-gsutil -m rsync -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas_new/ $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
+gsutil -m rsync -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas/ $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
+
+gsutil -m cp -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas/GCST011073.parquet $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
+gsutil -m cp -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas/GCST011075.parquet $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
+gsutil -m cp -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas/GCST011080.parquet $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
+gsutil -m cp -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas/GCST011081.parquet $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
+
 
 ```
 
@@ -99,15 +105,6 @@ gsutil -m rsync -r gs://genetics-portal-dev-sumstats/filtered/significant_window
 export PYSPARK_SUBMIT_ARGS="--driver-memory 80g pyspark-shell"
 export SPARK_HOME=/home/ubuntu/software/spark-2.4.0-bin-hadoop2.7
 export PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-2.4.0-src.zip:$PYTHONPATH
-
-conda-env create -n dsubenv -f dsub_env.yaml
-source activate dsubenv
-
-# Install docker (needed if we want to run dsub with --provider local)
-sudo apt install docker.io
-sudo usermod -a -G docker $USER  # Add current user to authorise docker group
-# Need to re-connect to VM, then run...
-docker run hello-world  # Test that docker works
 ```
 
 #### Step 3: Make manifest file
@@ -177,7 +174,7 @@ then I've solved it just by deactivating conda and reactivating. This seems to h
 time python 5_combine_results.py
 
 # Make a note as to what this finemapping run contained. E.g.:
-echo "Run to add Covid-19 R4 GWAS results" > results/README.txt
+echo "Run to add 4 Covid studies (R4) and Daniel Crouch T1D study" > results/README.txt
 
 # Copy the results to GCS
 bash 6_copy_results_to_gcs.sh
