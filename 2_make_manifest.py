@@ -4,18 +4,22 @@
 # Ed Mountjoy
 #
 
+import gzip
 import json
 import os
-from pprint import pprint
-import pandas as pd
-from numpy import nan
 from glob import glob
-import gzip
+
+import yaml
+
 
 def main():
+    # Load analysis config file
+    config_file = 'configs/analysis.config.yaml'
+    with open(config_file, 'r') as in_h:
+        config_dict = yaml.safe_load(in_h)
 
     # Args
-    input_pattern = '/home/ubuntu/results/finemapping/tmp/filtered_input/*.json.gz'
+    input_pattern = os.path.join(config_dict['finemapping_output_dir'], 'tmp/filtered_input/*.json.gz')
     out_json = 'configs/manifest.json.gz'
     valid_chrom = set([str(chrom) for chrom in range(1, 23)])
     method = 'conditional'
@@ -26,17 +30,24 @@ def main():
     # log_path = root + '/logs/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
     # tmp_path = root + '/tmp/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
     # ld_ref = '/Users/em21/Projects/reference_data/uk10k_2019Feb/3_liftover_to_GRCh38/output/{chrom}.ALSPAC_TWINSUK.maf01.beagle.csq.shapeit.20131101'
-    
+
     # Path patterns (server)
-    # root = '/home/ubuntu/results/finemapping'
-    # ld_ref = '/home/ubuntu/data/genotypes/ukb_v3_downsampled10k_plink/ukb_v3_chr{chrom}.downsampled10k'
-    root = '/home/js29/genetics-finemapping'
-    input_pattern = root + '/tmp/filtered_input/*.json.gz'
-    out_path = root + '/output/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
-    log_path = root + '/logs/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
-    tmp_path = root + '/tmp/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
-    #ld_ref = root + '/data/1000Genomes_phase3/EUR/EUR.{chrom}.1000Gp3.20130502'
-    ld_ref = root + '/data/ukb_v3_downsampled10k/ukb_v3_chr{chrom}.downsampled10k'
+    out_path = os.path.join(config_dict['finemapping_output_dir'],
+                            'output/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}')
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
+
+    log_path = os.path.join(config_dict['finemapping_output_dir'],
+                            'logs/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}')
+    if not os.path.exists(log_path):
+        os.makedirs(log_path)
+
+    tmp_path = os.path.join(config_dict['finemapping_output_dir'],
+                            'tmp/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}')
+    if not os.path.exists(tmp_path):
+        os.makedirs(tmp_path)
+
+    ld_ref = config_dict['linkage_disequilibrium_reference']
 
     # Create manifest
     manifest = []

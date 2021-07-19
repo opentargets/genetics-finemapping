@@ -13,6 +13,7 @@ export PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-2.4.0-src.zip:$
 import pyspark.sql
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
+import yaml
 import os
 from shutil import copyfile
 from glob import glob
@@ -20,6 +21,10 @@ import yaml
 import subprocess as sp
 
 def main():
+    # Load analysis config file
+    config_file = 'configs/analysis.config.yaml'
+    with open(config_file, 'r') as in_h:
+        config_dict = yaml.safe_load(in_h)
 
     # Make spark session
     # Using `ignoreCorruptFiles` will skip empty files
@@ -33,15 +38,21 @@ def main():
     print('Spark version: ', spark.version)
 
     # Args
-    #root = '/home/ubuntu/results/finemapping'
-    root = '/home/js29/genetics-finemapping'
-    in_top_loci_pattern = root + '/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/top_loci.json.gz'
-    in_credset_pattern = root + '/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/credible_set.json.gz'
-    out_top_loci = root + '/results/top_loci'
-    out_credset = root + '/results/credset'
+    in_top_loci_pattern = os.path.join(config_dict['finemapping_output_dir'],
+                                       'output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/top_loci.json.gz')
+    in_credset_pattern = os.path.join(config_dict['finemapping_output_dir'],
+                                      'output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/credible_set.json.gz')
+
+    out_top_loci = os.path.join(config_dict['finemapping_output_dir'], 'results/top_loci')
+    if not os.path.exists(out_top_loci):
+        os.makedirs(out_top_loci)
+
+    out_credset = os.path.join(config_dict['finemapping_output_dir'], 'results/credset')
+    if not os.path.exists(out_credset):
+        os.makedirs(out_credset)
 
     with open('configs/analysis.config.yaml', 'r') as in_h:
-        config_dict = yaml.load(in_h)
+        config_dict = yaml.safe_load(in_h)
 
     # Process top loci
     toploci = spark.read.json(in_top_loci_pattern)
@@ -84,8 +95,8 @@ def main():
     
     if config_dict['run_finemap']:
         # Process finemap output
-        in_finemap_pattern = root + '/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/finemap_snp.tsv.gz'
-        out_finemap_snp = root + '/results/finemap_snp'
+        in_finemap_pattern = os.path.join(config_dict['finemapping_output_dir'], '/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/finemap_snp.tsv.gz')
+        out_finemap_snp = os.path.join(config_dict['finemapping_output_dir'], '/results/finemap_snp')
         finemap_res = (
             spark.read.option("delimiter", "\t")
             .option("header", "true")

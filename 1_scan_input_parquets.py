@@ -10,13 +10,21 @@ export SPARK_HOME=/Users/em21/software/spark-2.4.0-bin-hadoop2.7
 export PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-2.4.0-src.zip:$PYTHONPATH
 '''
 
-import pyspark.sql
-from pyspark.sql.types import *
-from pyspark.sql.functions import *
-from glob import glob
+import os
 from functools import reduce
+from glob import glob
+
+import pyspark.sql
+import yaml
+from pyspark.sql.functions import *
+from pyspark.sql.types import *
+
 
 def main():
+    # Load analysis config file
+    config_file = 'configs/analysis.config.yaml'
+    with open(config_file, 'r') as in_h:
+        config_dict = yaml.safe_load(in_h)
 
     # Make spark session
     spark = (
@@ -31,17 +39,11 @@ def main():
     gwas_pval_threshold = 5e-8
 
     # Paths
-    # gwas_pattern = '/home/ubuntu/data/sumstats/filtered/significant_window_2mb/gwas/*.parquet'
-    # mol_pattern = '/home/ubuntu/data/sumstats/filtered/significant_window_2mb/molecular_trait/*.parquet'
-    # out_path = '/home/ubuntu/results/finemapping/tmp/filtered_input'
-
-    # Not using - trying to run on VM instead
-    # gwas_pattern = 'gs://genetics-portal-sumstats-b38/filtered/significant_window_2mb_analysis/gwas/*.parquet'
-    # mol_pattern = 'gs://genetics-portal-sumstats-b38/filtered/significant_window_2mb_analysis/molecular_trait/*.parquet'
-    # out_path = 'gs://genetics-portal-staging/finemapping/tmp/filtered_input'
-    gwas_pattern = '/home/js29/genetics-finemapping/data/filtered/significant_window_2mb/gwas/*.parquet'
-    mol_pattern = '/home/js29/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/*.parquet'
-    out_path = '/home/js29/genetics-finemapping/tmp/filtered_input'
+    gwas_pattern = os.path.join(config_dict['gwas_files'], '*.parquet')
+    mol_pattern = os.path.join(config_dict['mol_trait_files'], '*.parquet')
+    out_path = os.path.join(config_dict['finemapping_output_dir'], 'tmp/filtered_input')
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
 
     # Load GWAS dfs
     strip_path_gwas = udf(lambda x: x.replace('file:', '').split('/part-')[0], StringType())
