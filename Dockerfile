@@ -1,4 +1,6 @@
-FROM continuumio/miniconda:4.6.14
+FROM ubuntu:21.04
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Create non-root user 
 ARG UID
@@ -7,57 +9,52 @@ RUN groupadd -g $GID -o otg
 RUN useradd -m -u $UID -g $GID -o -s /bin/bash otg
 
 # Do everything that requires root user
-# Install OpenJDK-8 (as root)
+# Install dependencies
 RUN apt-get update && \
-    apt-get install -y openjdk-8-jdk && \
-    apt-get install -y ant && \
-    apt-get clean;
+    apt-get install --yes ant openjdk-8-jdk wget bzip2 parallel unzip && \
+    apt-get clean
 
-# Fix certificate issues (as root)
+# fix certificate issues (as root)
 RUN apt-get update && \
     apt-get install ca-certificates-java && \
     apt-get clean && \
     update-ca-certificates -f;
 
-# Install parallel
-RUN apt install -yf parallel
+# install micromamba
+RUN mkdir -p /software/micromamba && \
+    cd /software/micromamba && \
+    wget -qO- https://micromamba.snakepit.net/api/micromamba/linux-64/0.15.2 | tar -xvj bin/micromamba && \
+    chown -R otg:otg /software/micromamba
+ENV PATH="/software/micromamba/bin:${PATH}"
 
 # download gcta
-RUN apt-get install unzip
-RUN wget https://cnsgenomics.com/software/gcta/bin/gcta_1.92.3beta3.zip -P /software/gcta
-RUN chown -R otg:otg /software/gcta
+RUN wget https://cnsgenomics.com/software/gcta/bin/gcta_1.92.3beta3.zip -P /software/gcta && \
+    unzip /software/gcta/gcta_1.92.3beta3.zip -d /software/gcta && \
+    rm /software/gcta/gcta_1.92.3beta3.zip && \
+    chown -R otg:otg /software/gcta
+ENV PATH="/software/gcta/gcta_1.92.3beta3:${PATH}"
 
 # switch to otg user
 USER otg
 
-# Conda and the envirounment dependencies
-COPY ./environment.yaml /home/otg/finemapping/
-WORKDIR /home/otg/finemapping
-RUN conda env create -n finemapping --file environment.yaml
-RUN echo "source activate finemapping" > ~/.bashrc
-ENV PATH /home/otg/.conda/envs/finemapping/bin:$PATH
+# create conda/mamba environment
+COPY ./environment.yaml /home/otg
+RUN micromamba install --name base --file /home/otg/environment.yaml --root-prefix /software/micromamba --yes
 
-# Setup JAVA_HOME -- useful for docker commandline
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
-RUN export JAVA_HOME
+# set JAVA_HOME (useful for docker commandline)
+ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64/"
 
-# Install GCTA
-RUN unzip /software/gcta/gcta_1.92.3beta3.zip -d /software/gcta
-RUN rm /software/gcta/gcta_1.92.3beta3.zip
-ENV PATH="/software/gcta/gcta_1.92.3beta3:${PATH}"
+# install Google Cloud SDK
+# RUN curl https://sdk.cloud.google.com | bash
 
-# Google Cloud SDK
-RUN curl https://sdk.cloud.google.com | bash
-
-# Default command
-CMD ["/bin/bash"]
-
-# Copy the v2d project
-COPY ./ /home/otg/finemapping
-
-# Make all files in finemapping owned by the non-root user
+# copy all files of the repo and change owner
+COPY ./ /finemapping
 USER root
-RUN chown -R otg:otg /home/otg/finemapping
-
-# Run container as non-root user
+RUN chown -R otg:otg /finemapping
 USER otg
+
+# set default directory
+WORKDIR /finemapping
+
+# default command
+CMD ["/bin/bash"]
