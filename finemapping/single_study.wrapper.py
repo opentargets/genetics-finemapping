@@ -153,11 +153,12 @@ def parse_args():
 
     # Add methological args
     p.add_argument('--method',
-                   metavar="[conditional|distance]",
+                   metavar="[conditional|distance|none]",
                    help=("Which method to run, either with conditional analysis"
-                         " (gcta-cojo) or distance based with conditional"),
+                         " (gcta-cojo) or distance based without conditional"
+                         " or none (assume single causal in window)"),
                    type=str,
-                   choices=['conditional', 'distance'],
+                   choices=['conditional', 'distance', 'none'],
                    required=True)
     p.add_argument('--pval_threshold',
                    metavar="<float>",
