@@ -76,7 +76,7 @@ def read_error_from_gcta_log(log_file):
                 error_lines.append(line.rstrip())
     return '\n'.join(error_lines)
 
-def perfrom_conditional_adjustment(sumstats,
+def perform_conditional_adjustment(sumstats,
         in_plink,
         temp_dir,
         index_var,
