@@ -22,7 +22,7 @@ def detect_top_loci(sumstats, in_plink, temp_dir,
     ''' Find top loci for a given study
     Args:
         TODO
-        method ([conditional|distance]): method for identifying top loci
+        method ([conditional|distance|none]): method for identifying top loci
     '''
 
     temp_dir = os.path.join(temp_dir, 'top_loci')
@@ -43,8 +43,12 @@ def detect_top_loci(sumstats, in_plink, temp_dir,
     elif rows_below_threshold == 1:
         if logger:
             logger.info('Only 1 variant with pval < p_threshold, skipping clumping...')
-        # Use empty sumstats df
         top_loci = sumstats.loc[sumstats['pval'] <= cojo_p, :]
+    elif method == 'none':
+        if logger:
+            logger.info('No conditional analysis - assuming single causal variant...')
+        minp_index = sumstats['pval'].index(min(sumstats['pval']))
+        top_loci = sumstats.iloc[minp_index, :]
     # Detect top loci using GCTA-cojo
     elif method == 'conditional':
         if logger:
@@ -72,8 +76,8 @@ def detect_top_loci(sumstats, in_plink, temp_dir,
     # Raise error if conditional or distance is not selected
     else:
         if logger:
-            logger.error('Method must be one of [conditional|distance]')
-        raise ArgumentError('Method must be one of [conditional|distance]')
+            logger.error('Method must be one of [conditional|distance|none]')
+        raise ArgumentError('Method must be one of [conditional|distance|none]')
 
     # Add column specifying method used
     top_loci['clump_method'] = method

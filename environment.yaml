@@ -5,7 +5,7 @@ dependencies:
 - dask>=2.6.0
 - gcsfs
 - fastparquet
-- pyarrow>=0.15
+- pyarrow>=1.0.0
 - pyyaml
 - scipy
 - numpy

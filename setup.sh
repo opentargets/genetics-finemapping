@@ -47,7 +47,7 @@ echo export PATH="$PWD:\$PATH" >> ~/.profile
 #gsutil -m cp ukb_v3_chr11* gs://genetics-portal-analysis/jeremy/ukb/tmp/
 #gsutil -m cp gs://genetics-portal-analysis/jeremy/ukb/tmp/ukb_v3_chr11* ~/genetics-finemapping/data/ukb_downsampled10k/
 mkdir -p ~/genetics-finemapping/data/ukb_downsampled10k/
-gsutil -m cp -r gs://open-targets-ukbb/genotypes/ukb_v3_downsampled10k/ukb_v3_chr* ~/genetics-finemapping/data/ukb_downsampled10k/
+gsutil -m rsync gs://open-targets-ukbb/genotypes/ukb_v3_downsampled10k/ $HOME/genetics-finemapping/data/ukb_v3_downsampled10k/
 
 # Install JRE
 sudo apt install -yf openjdk-8-jre-headless openjdk-8-jdk

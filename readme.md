@@ -81,21 +81,21 @@ Note: The capability of running FINEMAP has been used but not extensively tested
 
 Prepare LD references in plink `bed|bim|fam` format, currently using [UK Biobank downsampled to 10K individuals and lifted over to GRCh38](https://github.com/opentargets/genetics-backend/tree/master/reference_data/uk_biobank_v3).
 
-Download to local machine using `gsutil -m rsync`.
+Download to local machine.
+To process only new data, we should only download data from new "significant window" directories.
 ```
 cd ~/genetics-finemapping
-mkdir -p data/ukb_v3_downsampled10k
-gsutil -m rsync gs://open-targets-ukbb/genotypes/ukb_v3_downsampled10k/ $HOME/genetics-finemapping/data/ukb_v3_downsampled10k/
+mkdir -p $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
+mkdir -p $HOME/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/
+# Because we use * to match multiple directories/files, we can't use rsync, so have to use cp.
+gsutil -m cp -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/*/gwas/*.parquet $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
+gsutil -m cp -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/*/molecular_trait/*.parquet $HOME/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/
 
-mkdir -p $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas
-gsutil -m rsync -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas/ $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
+mkdir -p $HOME/genetics-finemapping/data/filtered/significant_window_2mb/190606/molecular_trait/
+gsutil -m cp -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/190606/molecular_trait/*.parquet $HOME/genetics-finemapping/data/filtered/significant_window_2mb/190606/molecular_trait/
 
-gsutil -m cp -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas/GCST011073.parquet $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
-gsutil -m cp -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas/GCST011075.parquet $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
-gsutil -m cp -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas/GCST011080.parquet $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
-gsutil -m cp -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas/GCST011081.parquet $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
-
-
+find /home/js29/genetics-finemapping/data/filtered/significant_window_2mb -name "*_SUCCESS" | wc -l
+find /home/js29/genetics-finemapping/data/filtered/significant_window_2mb -name "*_SUCCESS" -delete
 ```
 
 #### Step 2: Prepare environment
@@ -142,7 +142,7 @@ nano 1_scan_input_parquets.py
 # Reads variants filtered for p value, and outputs a single json record in
 # tmp/filtered_input for each study/chromosome combination with at least one
 # significant variant. Takes a couple of minutes for 200 GWAS.
-python 1_scan_input_parquets.py
+time python 1_scan_input_parquets.py
 
 # Creates manifest file, one job per study/chromosome. Output path `configs/manifest.json.gz`
 python 2_make_manifest.py
@@ -155,7 +155,9 @@ mkdir logs
 tmux   # So run continues if connection is lost
 
 # Edit args in `4_run_commands.sh` (e.g. number of cores) and then
-time bash 4_run_commands.sh
+NCORES=30
+time bash 4_run_commands.sh $NCORES
+zcat commands_todo.txt.gz | shuf | parallel -j $NCORES --bar --joblog logs/parallel.jobs2.log
 
 # Exit tmux with Ctrl+b then d
 ```
@@ -169,15 +171,78 @@ then I've solved it just by deactivating conda and reactivating. This seems to h
 #### Step 5: Process the results
 
 ```
+rm -r /home/js29/genetics-finemapping/tmp/*
+
 # Combine the results of all the individual analyses
 # This step can be slow/inefficient due to Hadoop many small files problem
+# You are likely to get out of memory errors if you don't increase the java
+# heap space available to Spark with PYSPARK_SUBMIT_ARGS.
+export PYSPARK_SUBMIT_ARGS="--driver-memory 80g pyspark-shell"
 time python 5_combine_results.py
+```
 
+```
+# The below steps were used when we found duplicate top_loci, which was due
+# to duplicated lines in the eQTL catalogue ingest. This has since been fixed,
+# so the below should not be needed.
+# Concatenate together all top_loci and credset files
+time find output -name "top_loci.json.gz" | while read -r file; do zcat -f "$file"; done | gzip > top_loci.concat.json.gz &
+time find output -name "credible_set.json.gz" | while read -r file; do zcat -f "$file"; done | gzip > credible_set.concat.json.gz
+
+# Remove duplicates
+# This should only be necessary because when we last ingested eQTL catalogue
+# I failed to remove duplicate rows first.
+time zcat top_loci.concat.json.gz | sort | uniq | gzip > top_loci.dedup.json.gz &
+time zcat credible_set.concat.json.gz | sort | uniq | gzip > credible_set.dedup.json.gz
+
+time python 5_combine_results_rmdup.py
+```
+
+```
 # Make a note as to what this finemapping run contained. E.g.:
-echo "Run to add 4 Covid studies (R4) and Daniel Crouch T1D study" > results/README.txt
+echo "Run with updated QTL datasets, and updated GWAS catalog studies. Re-ran all previous studies, since QTL datasets are the bulk of the fine-mapping work." > results/README.txt
 
 # Copy the results to GCS
 bash 6_copy_results_to_gcs.sh
+```
+
+Number of top_loci raw: 1,623,534
+Number of top_loci after dups removed: 1,541,938
+Number of top_loci in previous version: 689,726
+
+Number of credset rows raw: 44,180,640
+Number of credset rows after dups removed: 40,910,064
+
+
+#### Step 6: Merge with previous fine-mapping results
+
+Steps like the below are needed if we are adding on to previous fine-mapping results, rather than recomputing everything.
+```
+mkdir -p finemapping_results/190612
+# Ed's previous fine-mapping results
+gsutil -m rsync -r gs://genetics-portal-staging/finemapping/190612/top_loci finemapping_results/190612/top_loci
+mv finemapping_results/190612/top_loci/part-00000-5e9aef09-9aea-4fab-898f-0725f0bbf865-c000.json.gz finemapping_results/190612/top_loci.json.gz
+
+# Newer finemapping results
+gsutil -m rsync -r gs://genetics-portal-dev-staging/finemapping finemapping_results/
+
+mkdir finemapping_merged
+
+python merge_finemap_results.py
+
+zcat finemapping_results/190612/top_loci.json.gz \
+    finemapping_results/210309/top_loci.json.gz \
+    finemapping_results/210515/top_loci.json.gz \
+    finemapping_results/finngen_210515/top_loci.json.gz \
+    | gzip > finemapping_merged/top_loci.json.gz
+
+
+echo "Merged fine-mapping results, includes Ed's release + 213 GWAS Catalog + 4 Covid studies + T1D study" > finemapping_merged/README.txt
+version_date=`date +%y%m%d`
+gsutil -m cp -r finemapping_merged/README.txt gs://genetics-portal-dev-staging/finemapping/merged_$version_date/README.txt
+gsutil -m cp -r finemapping_merged/top_loci.json.gz gs://genetics-portal-dev-staging/finemapping/merged_$version_date/top_loci.json.gz
+gsutil -m cp -r finemapping_merged/credset gs://genetics-portal-dev-staging/finemapping/merged_$version_date/
+
 ```
 
 ### Other notes

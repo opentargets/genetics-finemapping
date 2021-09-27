@@ -34,7 +34,7 @@ def main():
 
     # Load analysis config file
     with open(args.config_file, 'r') as in_h:
-        config_dict = yaml.load(in_h)
+        config_dict = yaml.load(in_h, Loader=yaml.FullLoader)
     logger.info('Analysis config: \n' + pprint.pformat(config_dict, indent=2))
     run_finemap = config_dict['run_finemap']
     
@@ -153,11 +153,12 @@ def parse_args():
 
     # Add methological args
     p.add_argument('--method',
-                   metavar="[conditional|distance]",
+                   metavar="[conditional|distance|none]",
                    help=("Which method to run, either with conditional analysis"
-                         " (gcta-cojo) or distance based with conditional"),
+                         " (gcta-cojo) or distance based without conditional"
+                         " or none (assume single causal in window)"),
                    type=str,
-                   choices=['conditional', 'distance'],
+                   choices=['conditional', 'distance', 'none'],
                    required=True)
     p.add_argument('--pval_threshold',
                    metavar="<float>",

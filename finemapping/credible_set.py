@@ -29,7 +29,7 @@ def run_credible_set_for_locus(
         index_info (dict): index locus information
         sumstats (pd.df): full summary stats
         top_loci (pd.df): table of top loci (for conditional analysis)
-        method ([conditional|distance]): whether to perform conditional analysis
+        method ([conditional|distance|none]): whether to perform conditional analysis
             or extract a set distance
     '''
 
@@ -39,16 +39,15 @@ def run_credible_set_for_locus(
 
     temp_dir = os.path.join(temp_dir, 'credible_set')
 
-    # Extract `cojo_window` region surrounding the index variant
-    sumstat_wind = fm_utils.extract_window(
-        sumstats, index_info['chrom'], index_info['pos'], cojo_window)
-    if logger:
-        logger.info('  {0} variants in {1}kb cojo window around index'
-                    ' variant'.format(sumstat_wind.shape[0], cojo_window))
-
     # Perform conditional analysis
     sumstat_cond = None
     if method == 'conditional':
+        # Extract `cojo_window` region surrounding the index variant
+        sumstat_wind = fm_utils.extract_window(
+            sumstats, index_info['chrom'], index_info['pos'], cojo_window)
+        if logger:
+            logger.info('  {0} variants in {1}kb cojo window around index'
+                        ' variant'.format(sumstat_wind.shape[0], cojo_window))
 
         # Get list of variants to condition on
         cond_list = make_list_to_condition_on(
@@ -63,7 +62,7 @@ def run_credible_set_for_locus(
 
         # Only do conditional if there are variants to condition on
         if len(cond_list) > 0:
-            sumstat_cond = fm_gcta.perfrom_conditional_adjustment(
+            sumstat_cond = fm_gcta.perform_conditional_adjustment(
                 sumstat_wind,
                 in_plink,
                 temp_dir,
@@ -75,10 +74,11 @@ def run_credible_set_for_locus(
                 logger=logger
             )
     else:
+        sumstat_wind = sumstats
         if logger:
             logger.info('  not conditioning as method != conditional')
 
-    # If conditional analysis was not perform, we need to make the sumstat df
+    # If conditional analysis was not performed, we need to make the sumstat df
     # look the same, add (beta_cond, se_cond, pval_cond) columns
     if sumstat_cond is None:
         sumstat_cond = sumstat_wind
@@ -87,18 +87,19 @@ def run_credible_set_for_locus(
         sumstat_cond['pval_cond'] = sumstat_cond['pval']
 
     # Extract `fm_wind` region surrounding the index variant
+    # TODO: test results compared to Ed's code before, which didn't use sumstat_cond here
     sumstat_wind = fm_utils.extract_window(
-        sumstats, index_info['chrom'], index_info['pos'], fm_wind)
+        sumstat_cond, index_info['chrom'], index_info['pos'], fm_wind)
     if logger:
         logger.info('  {0} variants in {1}kb fine-mapping window around index'
                     ' variant'.format(sumstat_wind.shape[0], fm_wind))
 
     # Do credible set analysis
-    if sumstat_cond.shape[0] > 0:
+    if sumstat_wind.shape[0] > 0:
 
         if logger:
             logger.info('  calculating credible sets...')
-        cred_sets = calc_credible_sets(sumstat_cond, pp_threshold=pp_threshold)
+        cred_sets = calc_credible_sets(sumstat_wind, pp_threshold=pp_threshold)
 
         if logger:
             logger.info('  found {0} in 95% and {1} in 99% cred sets'.format(
