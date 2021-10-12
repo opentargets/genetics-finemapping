@@ -6,6 +6,8 @@ Fine-mapping pipeline for Open Targets Genetics. In brief, the method is:
 2. If `--method conditional`, for each independent locus condition on all other surrounding loci (configurable with `cojo_wind`).
 3. Perform approximate Bayes factor credible set analysis for each independent locus.
 
+For FinnGen, we incorporate each new release by directly taking the SuSIE fine-mapping outputs from FinnGen to determine top loci. Each time this is done, we have to be careful to NOT to run GCTA fine-mapping on FinnGen sumstats, since their SuSIE fine-mapping is superior (and we don't have a good LD reference).
+
 ### Requirements
 - Spark v2.4.0
 - GCTA (>= v1.91.3) must be available in `$PATH`
@@ -87,13 +89,14 @@ To process only new data, we should only download data from new "significant win
 cd ~/genetics-finemapping
 mkdir -p $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
 mkdir -p $HOME/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/
-# Because we use * to match multiple directories/files, we can't use rsync, so have to use cp.
-gsutil -m cp -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/*/gwas/*.parquet $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
-gsutil -m cp -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/*/molecular_trait/*.parquet $HOME/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/
 
-mkdir -p $HOME/genetics-finemapping/data/filtered/significant_window_2mb/190606/molecular_trait/
-gsutil -m cp -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/190606/molecular_trait/*.parquet $HOME/genetics-finemapping/data/filtered/significant_window_2mb/190606/molecular_trait/
+gsutil -m rsync -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas/ $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
+gsutil -m rsync -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/molecular_trait/ $HOME/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/
 
+# Remove FinnGen GWAS, since we don't run fine-mapping for them
+rm -r $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/FINNGEN*
+
+# Remove extra files that can screw up data loading later
 find /home/js29/genetics-finemapping/data/filtered/significant_window_2mb -name "*_SUCCESS" | wc -l
 find /home/js29/genetics-finemapping/data/filtered/significant_window_2mb -name "*_SUCCESS" -delete
 ```
@@ -200,7 +203,7 @@ time python 5_combine_results_rmdup.py
 
 ```
 # Make a note as to what this finemapping run contained. E.g.:
-echo "Run with updated QTL datasets, and updated GWAS catalog studies. Re-ran all previous studies, since QTL datasets are the bulk of the fine-mapping work." > results/README.txt
+echo "Run with updated QTL datasets, and updated GWAS catalog studies. Re-ran all previous studies, since QTL datasets are the bulk of the fine-mapping work. Fixed an issue with 210825 version." > results/README.txt
 
 # Copy the results to GCS
 bash 6_copy_results_to_gcs.sh
@@ -216,8 +219,35 @@ Number of credset rows after dups removed: 40,910,064
 
 #### Step 6: Merge with previous fine-mapping results
 
-Steps like the below are needed if we are adding on to previous fine-mapping results, rather than recomputing everything.
+Steps like the below are needed if we are adding on to previous fine-mapping results, rather than recomputing everything. This is also needed each time to incorporate FinnGen.
 ```
+mkdir -p finemapping_temp/210923
+mkdir -p finemapping_to_merge/finngen_210515
+mkdir -p finemapping_merged
+gsutil -m rsync -r gs://genetics-portal-dev-staging/finemapping/210923 finemapping_temp/210923
+gsutil -m rsync -r gs://genetics-portal-dev-staging/finemapping/finngen_210515 finemapping_to_merge/finngen_210515
+
+# Filter out any FinnGen loci from last release
+zcat finemapping_temp/210923/top_loci.json.gz | grep -v "FINNGEN" | gzip > finemapping_temp/210923/top_loci_no_FINNGEN.json.gz
+
+zcat finemapping_temp/210923/top_loci_no_FINNGEN.json.gz \
+    finemapping_to_merge/finngen_210515/top_loci.json.gz \
+    | gzip > finemapping_merged/top_loci.json.gz
+
+python 7a_credset_remove_finngen.py # Write new dataset without FinnGen
+
+zcat finemapping_temp/210923/credset/part*.json.gz | wc -l
+zcat finemapping_to_merge/210923/credset/part*.json.gz | wc -l # After FinnGen loci removed
+
+# Merge all non-FinnGen credsets with latest FinnGen credsets
+python 7_merge_finemap_results.py
+
+zcat finemapping_merged/credset/part*.json.gz | wc -l
+
+gsutil -m rsync -r $HOME/genetics-finemapping/finemapping_merged/ gs://genetics-portal-dev-staging/finemapping/${version_date}_merged
+
+
+################ PREVIOUS CODE ###############
 mkdir -p finemapping_results/190612
 # Ed's previous fine-mapping results
 gsutil -m rsync -r gs://genetics-portal-staging/finemapping/190612/top_loci finemapping_results/190612/top_loci
