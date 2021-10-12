@@ -33,7 +33,7 @@ def main():
         .getOrCreate()
     )
 
-    in_credset_pattern = 'finemapping_results/*/credset'
+    in_credset_pattern = 'finemapping_to_merge/*/credset'
     out_credset = 'finemapping_merged/credset'
     credset = spark.read.json(in_credset_pattern)
     (
