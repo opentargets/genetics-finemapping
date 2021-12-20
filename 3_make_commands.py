@@ -11,6 +11,7 @@ import sys
 import json
 import argparse
 import gzip
+import yaml
 
 def main():
 
@@ -23,6 +24,9 @@ def main():
     # Pipeline args
     script = 'finemapping/single_study.wrapper.py'
     analysis_config = 'configs/analysis.config.yaml'
+
+    with open(analysis_config, 'r') as in_h:
+        config_dict = yaml.load(in_h, Loader=yaml.FullLoader)
 
     # Open command files
     todo_h = gzip.open(out_todo, 'w')
@@ -61,7 +65,7 @@ def main():
             # Skip if both toploci and credset outputs exist
             if (os.path.exists(rec['out_top_loci']) and
                     os.path.exists(rec['out_credset']) and
-                    os.path.exists(rec['out_finemap'])):
+                    (not config_dict['run_finemap'] or os.path.exists(rec['out_finemap']))):
                 done_h.write((cmd_str + '\n').encode())
                 continue
             else:

@@ -31,16 +31,8 @@ def main():
     gwas_pval_threshold = 5e-8
 
     # Paths
-    # gwas_pattern = '/home/ubuntu/data/sumstats/filtered/significant_window_2mb/gwas/*.parquet'
-    # mol_pattern = '/home/ubuntu/data/sumstats/filtered/significant_window_2mb/molecular_trait/*.parquet'
-    # out_path = '/home/ubuntu/results/finemapping/tmp/filtered_input'
-
-    # Not using - trying to run on VM instead
-    # gwas_pattern = 'gs://genetics-portal-sumstats-b38/filtered/significant_window_2mb_analysis/gwas/*.parquet'
-    # mol_pattern = 'gs://genetics-portal-sumstats-b38/filtered/significant_window_2mb_analysis/molecular_trait/*.parquet'
-    # out_path = 'gs://genetics-portal-staging/finemapping/tmp/filtered_input'
-    gwas_pattern = '/home/js29/genetics-finemapping/data/filtered/significant_window_2mb/gwas/*.parquet'
-    mol_pattern = '/home/js29/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/*.parquet'
+    gwas_pattern = '/home/js29/genetics-finemapping/data/filtered/significant_window_2mb/*/gwas/*.parquet'
+    mol_pattern = '/home/js29/genetics-finemapping/data/filtered/significant_window_2mb/*/molecular_trait/*.parquet'
     out_path = '/home/js29/genetics-finemapping/tmp/filtered_input'
 
     # Load GWAS dfs

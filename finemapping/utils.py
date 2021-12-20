@@ -32,6 +32,11 @@ def load_sumstats(in_pq, study_id, phenotype_id=None, bio_feature=None,
     if phenotype_id:
         row_grp_filters.append(('phenotype_id', '==', phenotype_id))
     if chrom:
+        #row_grp_filters.append(('chrom', '==', str(chrom)))
+        # JS: Changing this due to getting errors like:
+        # pyarrow.lib.ArrowNotImplementedError: Function equal has no kernel matching input types (array[int32], scalar[string])
+        # Which I think is because the partitioned parquet chrom=<val> reads the column
+        # as integer and we were using a string in the row group filter.
         row_grp_filters.append(('chrom', '==', str(chrom)))
 
     # Create column filters
@@ -42,11 +47,13 @@ def load_sumstats(in_pq, study_id, phenotype_id=None, bio_feature=None,
     # Read file
     # gather_statistics=True seems to be necessary, otherwise get a dask
     # error "Cannot apply filters with gather_statistics=False"
+    # index=False is also essential to avoid dask errors with newer dask versions
     df = dd.read_parquet(in_pq,
                          columns=cols_to_keep,
                          filters=row_grp_filters,
                          gather_statistics=True,
-                         engine='pyarrow')
+                         engine='pyarrow',
+                         index=False)
 
     # Conversion to in-memory pandas
     df = (

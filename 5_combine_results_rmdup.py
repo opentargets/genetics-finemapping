@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Ed Mountjoy
+# Jeremy Schwartzentruber
+#
+# This script was used when we found that some top_loci were duplicated, which was
+# due to eQTL catalogue ingestion before duplicate SNPs were removed. In general
+# this script should not be needed.
 #
 '''
 # Set SPARK_HOME and PYTHONPATH to use 2.4.0
@@ -35,10 +39,10 @@ def main():
     # Args
     #root = '/home/ubuntu/results/finemapping'
     root = '/home/js29/genetics-finemapping'
-    in_top_loci_pattern = root + '/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/top_loci.json.gz'
-    in_credset_pattern = root + '/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/credible_set.json.gz'
-    #in_top_loci_pattern = root + '/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=21/top_loci.json.gz'
-    #in_credset_pattern = root + '/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=21/credible_set.json.gz'
+    #in_top_loci_pattern = root + '/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/top_loci.json.gz'
+    #in_credset_pattern = root + '/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/credible_set.json.gz'
+    in_top_loci_pattern = root + '/top_loci.dedup.json.gz'
+    in_credset_pattern = root + '/credible_set.dedup.json.gz'
     
     out_top_loci = root + '/results/top_loci'
     out_credset = root + '/results/credset'
@@ -56,7 +60,14 @@ def main():
         toploci = toploci.withColumn('bio_feature', lit(None))
 
     # Remove any duplicate rows of top_loci
+    last_n = toploci.count()
     toploci = toploci.dropDuplicates(subset=['study_id', 'bio_feature', 'phenotype_id', 'type', 'variant_id'])
+    num_toploci = toploci.count()
+    print('{} toploci removed that were duplicates'.format( last_n - num_toploci ))
+
+    num_gwas_loci = toploci.filter(col('type') == 'gwas').count()
+    num_qtl_loci = num_toploci - num_gwas_loci
+    print(f'{num_toploci} toploci remain. {num_gwas_loci} GWAS and {num_qtl_loci} QTL')
 
     (
         toploci
@@ -82,7 +93,11 @@ def main():
         credset = credset.withColumn('bio_feature', lit(None))
 
     # Remove any duplicate rows
-    credset = credset.dropDuplicates(subset=['study_id', 'bio_feature', 'phenotype_id', 'type', 'tag_variant_id'])
+    last_n = credset.count()
+    credset = credset.dropDuplicates(subset=['study_id', 'bio_feature', 'phenotype_id', 'lead_variant_id', 'tag_variant_id'])
+    num_credset_rows = credset.count()
+    print('{} credset rows removed that were duplicates'.format( last_n - num_credset_rows ))
+    print(f'{num_credset_rows} credset rows remain.')
 
     (
         credset
