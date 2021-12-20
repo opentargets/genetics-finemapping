@@ -1,5 +1,6 @@
 Convert FinnGen fine-mapping outputs to OT Genetics top loci and credset
 ==========================================
+NOTE: When ingesting a new FinnGen version, you will need to update paths below to refer to the new release.
 
 FinnGen runs fine-mapping using in-sample LD. We could not reproduce a fine-mapping analysis at a similar quality, and so it is better to import their results.
 They identify associated regions, and then merge together nearby regions, followed by runnning both FINEMAP and SuSIE. I don't see much reason to include both of these, and we will use the SuSIE output since it is simpler to work with.
@@ -16,13 +17,14 @@ AB1_PEDICULOSIS_ACARIASIS_OTHERINFEST	chr9:96623010-99623010	9:96624087:C:T	chr9
 We select the top SNP by p-value within each region for the top_loci table.
 We use the finngen_R*_<endpoint>.SUSIE.snp.bgz file for a trait to determine credible sets, since this has all fine-mapped regions for a given trait.
 
-Note: we discussed whether to include a single top variant from each FinnGen fine-mapping region, or to include the top variant from each credible set within a region (as long as the variant had p < 5e-8). We decided to include only the single top variant, because otherwise downstream steps such as colocalisation may not work. In the coloc pipeline (as of 2021-Apr) we use GCTA to get conditionally independent sumstats for each top variant (conditioning on other top_loci variants in the region). With FinnGen we can't do this, since the top variants were determined using SuSIE, and also because we don't have an equivalent reference panel. We wouldn't be able to run colocalisation with conditional sumstats, and so we could only do it using the full signal, which wouldn't correctly represent the secondary/tertiary signals.
+Note: we discussed whether to include a single top variant from each FinnGen fine-mapping region, or to include the top variant from each credible set within a region (as long as the variant had p < 5e-8). We decided to include only the single top variant, because otherwise downstream steps such as colocalisation may not work. In the coloc pipeline (as of 2021-Apr) we use GCTA to get conditionally independent sumstats for each top variant (conditioning on other top_loci variants in the region). With FinnGen we can't do this, since the top variants were determined using SuSIE, and also because we don't have an equivalent reference panel. We wouldn't be able to run colocalisation with conditional sumstats, and so we could only do it using the full signal, which wouldn't correctly represent the secondary/tertiary signals. HOWEVER, in the future FinnGen and eQTL catalogue may both release the direct SuSIE outputs / Bayes Factors for all SNPs (or a filtered subset), and these could be used directly with the new version of coloc to do colocalisations with each independent signal from SuSIE.
 
 ### FinnGen R5 stats
 2925 endpoints in R5 manifest
 2781 studies with fine-mapping outputs (SUSIE .snp.bgz files)
 2781 studies with fine-mapping that are in manifest
 1267 studies with fine-mapping where credible set is retained (some studies have no GW-sig loci, or the credible set has no SNP that is GW-sig)
+5707 top loci
 
 ### Requirements
 - Spark v2.4.0
