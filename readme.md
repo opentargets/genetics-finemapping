@@ -84,16 +84,41 @@ Note: The capability of running FINEMAP has been used but not extensively tested
 Prepare LD references in plink `bed|bim|fam` format, currently using [UK Biobank downsampled to 10K individuals and lifted over to GRCh38](https://github.com/opentargets/genetics-backend/tree/master/reference_data/uk_biobank_v3).
 
 Download to local machine.
-To process only new data, we should only download data from new "significant window" directories.
+To process only new data, we should only download "significant windows" from new studies. The pipeline runs fine-mapping for all available significant windows.
 ```
-cd ~/genetics-finemapping
+mkdir -p $HOME/genetics-finemapping/data/ukb_v3_downsampled10k
+gsutil -m rsync gs://open-targets-ukbb/genotypes/ukb_v3_downsampled10k/ $HOME/genetics-finemapping/data/ukb_v3_downsampled10k/
+```
+
+To process only new data, we should only download "significant windows" from new studies. The pipeline runs fine-mapping for all available significant windows.
+
+```
+cd $HOME/genetics-finemapping
 mkdir -p $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
 mkdir -p $HOME/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/
 
-gsutil -m rsync -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas/ $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
-gsutil -m rsync -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/molecular_trait/ $HOME/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/
+# Identify new GWAS studies: list all studies, order by date
+gsutil ls -l gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas/*/_SUCCESS | sort -k 2 > significant_window_gwas.ls.txt
+# Manually copy the list of new file paths into "gwas_to_download.txt"
+# Copy the .parquet folder names, not the _SUCCESS file names
 
-# Remove FinnGen GWAS, since we don't run fine-mapping for them
+# Download only new files into the destination folder
+cat gwas_to_download.txt | gsutil -m cp -r -I $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
+
+# Identify new molecular trait studies: list studies, order by date
+gsutil ls -l gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/molecular_trait/*/_SUCCESS | sort -k 2 > significant_window_moltrait.ls.txt
+# Manually copy the list of new file paths into "moltrait_to_download.txt"
+# Copy the .parquet folder names, not the _SUCCESS file names
+
+# Download only new files into the destination folder
+cat moltrait_to_download.txt | gsutil -m cp -r -I $HOME/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/
+gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/molecular_trait
+
+#gsutil -m rsync -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas/ $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
+#gsutil -m rsync -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/molecular_trait/ $HOME/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/
+#gsutil -m rsync -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/molecular_trait_new/ $HOME/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/
+
+# Remove FinnGen GWAS (if any), since we don't run fine-mapping for them
 rm -r $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/FINNGEN*
 
 # Remove extra files that can screw up data loading later
@@ -160,7 +185,8 @@ tmux   # So run continues if connection is lost
 # Edit args in `4_run_commands.sh` (e.g. number of cores) and then
 NCORES=30
 time bash 4_run_commands.sh $NCORES
-zcat commands_todo.txt.gz | shuf | parallel -j $NCORES --bar --joblog logs/parallel.jobs2.log
+#python 3_make_commands.py --quiet
+time zcat commands_todo.txt.gz | shuf | parallel -j $NCORES --bar --joblog logs/parallel.jobs.log
 
 # Exit tmux with Ctrl+b then d
 ```
@@ -219,60 +245,29 @@ Number of credset rows after dups removed: 40,910,064
 
 #### Step 6: Merge with previous fine-mapping results
 
-Steps like the below are needed if we are adding on to previous fine-mapping results, rather than recomputing everything. This is also needed each time to incorporate FinnGen.
+Steps like the below are needed if we are adding on to previous fine-mapping results, rather than recomputing everything. We assume that studies for which fine-mapping has been run are not present in the previous fine-mapped results that we are merging onto, otherwise we may get duplicates.
+
 ```
-mkdir -p finemapping_temp/210923
-mkdir -p finemapping_to_merge/finngen_210515
-mkdir -p finemapping_merged
-gsutil -m rsync -r gs://genetics-portal-dev-staging/finemapping/210923 finemapping_temp/210923
-gsutil -m rsync -r gs://genetics-portal-dev-staging/finemapping/finngen_210515 finemapping_to_merge/finngen_210515
-
-# Filter out any FinnGen loci from last release
-zcat finemapping_temp/210923/top_loci.json.gz | grep -v "FINNGEN" | gzip > finemapping_temp/210923/top_loci_no_FINNGEN.json.gz
-
-zcat finemapping_temp/210923/top_loci_no_FINNGEN.json.gz \
-    finemapping_to_merge/finngen_210515/top_loci.json.gz \
-    | gzip > finemapping_merged/top_loci.json.gz
-
-python 7a_credset_remove_finngen.py # Write new dataset without FinnGen
-
-zcat finemapping_temp/210923/credset/part*.json.gz | wc -l
-zcat finemapping_to_merge/210923/credset/part*.json.gz | wc -l # After FinnGen loci removed
-
-# Merge all non-FinnGen credsets with latest FinnGen credsets
-python 7_merge_finemap_results.py
-
-zcat finemapping_merged/credset/part*.json.gz | wc -l
-
-gsutil -m rsync -r $HOME/genetics-finemapping/finemapping_merged/ gs://genetics-portal-dev-staging/finemapping/${version_date}_merged
-
-
-################ PREVIOUS CODE ###############
-mkdir -p finemapping_results/190612
-# Ed's previous fine-mapping results
-gsutil -m rsync -r gs://genetics-portal-staging/finemapping/190612/top_loci finemapping_results/190612/top_loci
-mv finemapping_results/190612/top_loci/part-00000-5e9aef09-9aea-4fab-898f-0725f0bbf865-c000.json.gz finemapping_results/190612/top_loci.json.gz
-
-# Newer finemapping results
-gsutil -m rsync -r gs://genetics-portal-dev-staging/finemapping finemapping_results/
-
-mkdir finemapping_merged
-
-python merge_finemap_results.py
-
-zcat finemapping_results/190612/top_loci.json.gz \
-    finemapping_results/210309/top_loci.json.gz \
-    finemapping_results/210515/top_loci.json.gz \
-    finemapping_results/finngen_210515/top_loci.json.gz \
-    | gzip > finemapping_merged/top_loci.json.gz
-
-
-echo "Merged fine-mapping results, includes Ed's release + 213 GWAS Catalog + 4 Covid studies + T1D study" > finemapping_merged/README.txt
 version_date=`date +%y%m%d`
-gsutil -m cp -r finemapping_merged/README.txt gs://genetics-portal-dev-staging/finemapping/merged_$version_date/README.txt
-gsutil -m cp -r finemapping_merged/top_loci.json.gz gs://genetics-portal-dev-staging/finemapping/merged_$version_date/top_loci.json.gz
-gsutil -m cp -r finemapping_merged/credset gs://genetics-portal-dev-staging/finemapping/merged_$version_date/
 
+# Copy down previous fine-mapping results into temp folder
+mkdir -p finemapping_to_merge/210923
+gsutil -m rsync -r gs://genetics-portal-dev-staging/finemapping/210923 finemapping_to_merge/210923
+
+mkdir -p finemapping_to_merge/$version_date/
+cp -r results/* finemapping_to_merge/$version_date/
+
+#
+# Merge all old finemapping results with new
+#
+mkdir -p finemapping_merged
+
+# If there are all-new FinnGen results, then pass the --remove_previous_finngen flag.
+time python 7_merge_finemap_results.py --prev_results finemapping_to_merge/210923 --new_results finemapping_to_merge/$version_date/ --output finemapping_merged  
+#--remove_previous_finngen
+
+echo "Merged fine-mapping results from 210923 + 211221" > finemapping_merged/README.txt
+gsutil -m rsync -r $HOME/genetics-finemapping/finemapping_merged/ gs://genetics-portal-dev-staging/finemapping/${version_date}_merged
 ```
 
 ### Other notes

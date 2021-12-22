@@ -31,8 +31,8 @@ def main():
     gwas_pval_threshold = 5e-8
 
     # Paths
-    gwas_pattern = '/home/js29/genetics-finemapping/data/filtered/significant_window_2mb/*/gwas/*.parquet'
-    mol_pattern = '/home/js29/genetics-finemapping/data/filtered/significant_window_2mb/*/molecular_trait/*.parquet'
+    gwas_pattern = '/home/js29/genetics-finemapping/data/filtered/significant_window_2mb/gwas/*.parquet'
+    mol_pattern = '/home/js29/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/*.parquet'
     out_path = '/home/js29/genetics-finemapping/tmp/filtered_input'
 
     # Load GWAS dfs
