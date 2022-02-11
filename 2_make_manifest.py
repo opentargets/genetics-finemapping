@@ -35,8 +35,10 @@ def main():
     out_path = root + '/output/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
     log_path = root + '/logs/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
     tmp_path = root + '/tmp/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
+    
+    # In base folder rather than genenetics-finemapping for sharing with coloc pipeline
     #ld_ref = root + '/data/1000Genomes_phase3/EUR/EUR.{chrom}.1000Gp3.20130502'
-    ld_ref = root + '/data/ukb_v3_downsampled10k/ukb_v3_chr{chrom}.downsampled10k'
+    ld_ref = '/home/js29/data/ukb_v3_downsampled10k/ukb_v3_chr{chrom}.downsampled10k'
 
     # Create manifest
     manifest = []

@@ -87,7 +87,9 @@ def perform_conditional_adjustment(sumstats,
         condition_on,
         cojo_window=500,
         cojo_collinear=0.9,
-        logger=None):
+        logger=None,
+        split_ld=False,
+        var_pos=None):
     ''' Uses GCTA-cojo to perform conditional analysis
     Args:
         sumstats (pd.df)
@@ -96,6 +98,8 @@ def perform_conditional_adjustment(sumstats,
         index_var (str)
         chrom (str)
         condition_on (list): list of variants to condition on
+        split_ld (bool): whether to use split LD files or not
+        var_pos (int): needed if split_ld is True: integer position of index_var
     Return:
         pd.df of conditionally adjusted summary stats
     '''
@@ -120,9 +124,26 @@ def perform_conditional_adjustment(sumstats,
     # Write a conditional list
     write_cond_list(condition_on, gcta_cond)
 
+    ld_file = in_plink.format(chrom=chrom)
+    if split_ld:
+        # We assume that the LD file per chromosome has been split into 3-Mb chunks
+        window_size = int(3e6)
+        MB_pos = max(1, int(var_pos / 1e6))
+        def get_ld_fname(basefname, MB_pos):
+            window_start = int(MB_pos * 1e6 - 1e6)
+            window_end = int(window_start + window_size)
+            return(basefname + '.{:d}_{:d}'.format(window_start, window_end))
+        ld_file = get_ld_fname(ld_file, MB_pos)
+        # Check that the LD file exists
+        if not os.path.exists(ld_file + ".bim"):
+            # If not, try the previous window, as we may be near the chromosome end
+            ld_file = get_ld_fname(ld_file, MB_pos - 1)
+            if not os.path.exists(ld_file + ".bim"):
+                ld_file = get_ld_fname(MB_pos - 2)
+
     # Constuct command
     cmd =  [
-        'gcta64 --bfile {0}'.format(in_plink.format(chrom=chrom)),
+        'gcta64 --bfile {0}'.format(ld_file),
         '--chr {0}'.format(chrom),
         '--extract {0}'.format(gcta_snplist),
         '--cojo-file {0}'.format(gcta_in),

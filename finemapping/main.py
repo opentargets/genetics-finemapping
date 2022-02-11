@@ -22,7 +22,8 @@ def run_single_study(in_pq,
                      method='conditional',
                      run_finemap=False,
                      pval_threshold=5e-8,
-                     logger=None):
+                     logger=None,
+                     split_ld=False):
     ''' Runs the top loci and credible set analysis on a single study
     '''
 
@@ -90,7 +91,8 @@ def run_single_study(in_pq,
             cojo_collinear=analysis_config['cojo_colin'],
             pp_threshold=analysis_config['pp_threshold'],
             method=method,
-            logger=logger)
+            logger=logger,
+            split_ld=split_ld)
         # Append result
         if credset_res is not None:
             credset_res_list.append(credset_res)

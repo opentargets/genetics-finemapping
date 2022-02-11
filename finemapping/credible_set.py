@@ -23,7 +23,8 @@ def run_credible_set_for_locus(
             cojo_collinear,
             pp_threshold,
             method='conditional',
-            logger=None):
+            logger=None,
+            split_ld=False):
     ''' Run credible set analysis at a given locus (speficied by index_info)
     Args:
         index_info (dict): index locus information
@@ -71,7 +72,9 @@ def run_credible_set_for_locus(
                 cond_list,
                 cojo_window,
                 cojo_collinear,
-                logger=logger
+                logger=logger,
+                split_ld=split_ld,
+                var_pos=index_info['pos']
             )
     else:
         sumstat_wind = sumstats

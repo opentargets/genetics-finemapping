@@ -51,7 +51,8 @@ def main():
         method=args.method,
         run_finemap=run_finemap,
         pval_threshold=args.pval_threshold,
-        logger=logger
+        logger=logger,
+        split_ld=args.split_ld
     )
 
     # Add 'type' column to outputs
@@ -129,6 +130,9 @@ def parse_args():
                    help=("Input: plink file to estimate LD from"),
                    type=str,
                    required=True)
+    p.add_argument('--split_ld',
+                   help=("Assume LD reference has been split into subsets based on coordinates"),
+                   action='store_true')
     p.add_argument('--config_file',
                    metavar="<file>",
                    help=("Input: analysis config file"),
