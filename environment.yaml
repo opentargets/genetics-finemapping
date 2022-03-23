@@ -11,3 +11,4 @@ dependencies:
 - numpy
 - python-snappy
 - pyspark
+- jq

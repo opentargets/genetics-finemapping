@@ -13,11 +13,11 @@ export PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-2.4.0-src.zip:$
 import pyspark.sql
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
-import os
 from shutil import copyfile
 from glob import glob
 import yaml
 import subprocess as sp
+
 
 def main():
 
@@ -37,9 +37,7 @@ def main():
     root = '/home/js29/genetics-finemapping'
     in_top_loci_pattern = root + '/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/top_loci.json.gz'
     in_credset_pattern = root + '/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/credible_set.json.gz'
-    #in_top_loci_pattern = root + '/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=21/top_loci.json.gz'
-    #in_credset_pattern = root + '/output/study_id=*/phenotype_id=*/bio_feature=*/chrom=21/credible_set.json.gz'
-    
+
     out_top_loci = root + '/results/top_loci'
     out_credset = root + '/results/credset'
 

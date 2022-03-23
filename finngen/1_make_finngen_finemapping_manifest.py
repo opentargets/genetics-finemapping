@@ -19,9 +19,9 @@ def main():
     # Args --------------------------------------------------------------------
     #
 
-    study_prefix = 'FINNGEN_R5_'
-    # Manifest files from Finngen R5
-    in_finngen = 'inputs/r5_finngen.json'
+    study_prefix = 'FINNGEN_R6_'
+    # Manifest files from Finngen release
+    in_finngen = 'inputs/r6_finngen.json'
     in_snp_path_list = 'inputs/input_paths_finngen.txt'
 
     # Path to write main manifest file
@@ -55,7 +55,7 @@ def main():
     finngen['n_total'] = finngen['n_cases'] + finngen['n_controls']
 
     gcs = pd.read_csv(in_snp_path_list, sep='\t', header=None, names=['in_path'])
-    gcs['code'] = gcs['in_path'].apply(parse_code, prefix=study_prefix, splitBy='finngen_R5_')
+    gcs['code'] = gcs['in_path'].apply(parse_code, prefix=study_prefix, splitBy='finngen_R6_')
 
     merged = pd.merge(gcs, finngen, on='code')
     #merged.to_csv('merged.tsv', sep='\t', index=None)

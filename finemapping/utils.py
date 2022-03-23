@@ -5,10 +5,10 @@
 #
 
 import dask.dataframe as dd
-import numpy as np
 import pandas as pd
 from collections import OrderedDict
-import os
+import re
+
 
 def load_sumstats(in_pq, study_id, phenotype_id=None, bio_feature=None,
                   chrom=None, excl_mhc=None, min_maf=None, logger=None):
@@ -32,12 +32,17 @@ def load_sumstats(in_pq, study_id, phenotype_id=None, bio_feature=None,
     if phenotype_id:
         row_grp_filters.append(('phenotype_id', '==', phenotype_id))
     if chrom:
-        #row_grp_filters.append(('chrom', '==', str(chrom)))
-        # JS: Changing this due to getting errors like:
+        # HACK: This workaround is needed because for molecular trait studies we
+        # partition the files by chromosome. But spark/dask automatically infer the
+        # column type as integer, whereas for GWAS this column is in the metadata
+        # as a string. So there is no way to give a single column type in this row
+        # group filter.
+        if re.search('molecular_trait', in_pq):
+            row_grp_filters.append(('chrom', '==', int(chrom)))
+        else:
+            row_grp_filters.append(('chrom', '==', str(chrom)))
+        # Note: without this fix, you get errors like:
         # pyarrow.lib.ArrowNotImplementedError: Function equal has no kernel matching input types (array[int32], scalar[string])
-        # Which I think is because the partitioned parquet chrom=<val> reads the column
-        # as integer and we were using a string in the row group filter.
-        row_grp_filters.append(('chrom', '==', str(chrom)))
 
     # Create column filters
     cols_to_keep = ['study_id', 'phenotype_id', 'bio_feature', 'chrom', 'pos',

@@ -45,6 +45,7 @@ def main():
                 os.path.abspath(script),
                 '--pq', os.path.abspath(rec['in_pq']),
                 '--ld', os.path.abspath(rec['in_ld']),
+                '--split_ld',
                 '--config_file', os.path.abspath(analysis_config),
                 '--study_id', rec['study_id'],
                 '--phenotype_id', rec['phenotype_id'],

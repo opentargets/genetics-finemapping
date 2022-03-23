@@ -37,7 +37,7 @@ def main():
 
     # Load analysis config file
     with open(args.config_file, 'r') as in_h:
-        config_dict = yaml.load(in_h)
+        config_dict = yaml.load(in_h, Loader=yaml.FullLoader)
     logger.info('Analysis config: \n' + pprint.pformat(config_dict, indent=2))
     
     # Read all SNPs into dataframe, then filter on SNP probability
