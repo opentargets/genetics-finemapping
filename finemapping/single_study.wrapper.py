@@ -40,6 +40,7 @@ def main():
     
     # Run
     top_loci, credset_results, finemap_results = fm.run_single_study(
+        type=args.type,
         in_pq=args.pq,
         in_plink=args.ld,
         study_id=args.study_id,

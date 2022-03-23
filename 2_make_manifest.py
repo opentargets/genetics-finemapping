@@ -5,31 +5,17 @@
 #
 
 import json
-import os
-from pprint import pprint
-import pandas as pd
-from numpy import nan
 from glob import glob
 import gzip
 
 def main():
 
     # Args
-    input_pattern = '/home/ubuntu/results/finemapping/tmp/filtered_input/*.json.gz'
     out_json = 'configs/manifest.json.gz'
     valid_chrom = set([str(chrom) for chrom in range(1, 23)])
     method = 'conditional'
 
-    # Path patterns (local)
-    #root = '/Users/em21/Projects/genetics-finemapping'
-    # out_path = root + '/output/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
-    # log_path = root + '/logs/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
-    # tmp_path = root + '/tmp/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
-    # ld_ref = '/Users/em21/Projects/reference_data/uk10k_2019Feb/3_liftover_to_GRCh38/output/{chrom}.ALSPAC_TWINSUK.maf01.beagle.csq.shapeit.20131101'
-    
     # Path patterns (server)
-    # root = '/home/ubuntu/results/finemapping'
-    # ld_ref = '/home/ubuntu/data/genotypes/ukb_v3_downsampled10k_plink/ukb_v3_chr{chrom}.downsampled10k'
     root = '/home/js29/genetics-finemapping'
     input_pattern = root + '/tmp/filtered_input/*.json.gz'
     out_path = root + '/output/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
@@ -37,7 +23,6 @@ def main():
     tmp_path = root + '/tmp/study_id={0}/phenotype_id={1}/bio_feature={2}/chrom={3}'
     
     # In base folder rather than genenetics-finemapping for sharing with coloc pipeline
-    #ld_ref = root + '/data/1000Genomes_phase3/EUR/EUR.{chrom}.1000Gp3.20130502'
     ld_ref = '/home/js29/data/ukb_v3_downsampled10k/ukb_v3_chr{chrom}.downsampled10k'
 
     # Create manifest

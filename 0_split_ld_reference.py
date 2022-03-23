@@ -19,7 +19,7 @@ def main():
     window_size = int(3e6)
     window_spacing = int(1e6)
 
-    chrom_lengths = pd.read_csv('/configs/grch38_chrom_lengths.tsv', sep='\t')
+    chrom_lengths = pd.read_csv('configs/grch38_chrom_lengths.tsv', sep='\t')
 
     # Loop through each chromosome and use plink to split the ref panel into
     # overlapping windows

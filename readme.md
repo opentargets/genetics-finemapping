@@ -33,9 +33,6 @@ Many of the pipeline parameters must first be specified in the analysis config f
 A single study can be fine-mapped using the single study wrapper
 
 ```
-# Activate environment
-source activate finemap
-
 # Edit config file (this needs selecting with --config_file arg)
 nano configs/analysis.config.yaml
 
@@ -84,10 +81,14 @@ Note: The capability of running FINEMAP has been used but not extensively tested
 Prepare LD references in plink `bed|bim|fam` format, currently using [UK Biobank downsampled to 10K individuals and lifted over to GRCh38](https://github.com/opentargets/genetics-backend/tree/master/reference_data/uk_biobank_v3).
 
 Download to local machine.
-To process only new data, we should only download "significant windows" from new studies. The pipeline runs fine-mapping for all available significant windows.
 ```
-mkdir -p $HOME/genetics-finemapping/data/ukb_v3_downsampled10k
-gsutil -m rsync gs://open-targets-ukbb/genotypes/ukb_v3_downsampled10k/ $HOME/genetics-finemapping/data/ukb_v3_downsampled10k/
+mkdir -p $HOME/data/ukb_v3_downsampled10k
+gsutil -m rsync gs://open-targets-ukbb/genotypes/ukb_v3_downsampled10k/ $HOME/data/ukb_v3_downsampled10k/
+
+# To optimise the GCTA conditioning step, it helps to split the UKB reference panel
+# into smaller, overlapping "sub-panels". This is because (I believe) GCTA loads
+# in the index for the whole chromosome (*.bim file) to determine which SNPs match.
+time python 0_split_ld_reference.py --path $HOME/data/ukb_v3_downsampled10k/ukb_v3_chr{chrom}.downsampled10k
 ```
 
 To process only new data, we should only download "significant windows" from new studies. The pipeline runs fine-mapping for all available significant windows.
@@ -112,7 +113,6 @@ gsutil ls -l gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/m
 
 # Download only new files into the destination folder
 cat moltrait_to_download.txt | gsutil -m cp -r -I $HOME/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/
-gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/molecular_trait
 
 #gsutil -m rsync -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/gwas/ $HOME/genetics-finemapping/data/filtered/significant_window_2mb/gwas/
 #gsutil -m rsync -r gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/molecular_trait/ $HOME/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/
@@ -129,10 +129,13 @@ find /home/js29/genetics-finemapping/data/filtered/significant_window_2mb -name 
 #### Step 2: Prepare environment
 
 ```
+# Activate environment
+source activate finemap
+
 # Set spark paths
 export PYSPARK_SUBMIT_ARGS="--driver-memory 80g pyspark-shell"
-export SPARK_HOME=/home/ubuntu/software/spark-2.4.0-bin-hadoop2.7
-export PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-2.4.0-src.zip:$PYTHONPATH
+#export SPARK_HOME=/home/ubuntu/software/spark-2.4.0-bin-hadoop2.7
+#export PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-2.4.0-src.zip:$PYTHONPATH
 ```
 
 #### Step 3: Make manifest file
@@ -182,11 +185,13 @@ python 2_make_manifest.py
 mkdir logs
 tmux   # So run continues if connection is lost
 
-# Edit args in `4_run_commands.sh` (e.g. number of cores) and then
-NCORES=30
-time bash 4_run_commands.sh $NCORES
+# Set number of cores based on machine size used, then run all commands
+NCORES=63
+time bash 4_run_commands.sh $NCORES | tee logs/run_pipeline.out.txt
+
+# Commands can be regenerated and run separately if needed
 #python 3_make_commands.py --quiet
-time zcat commands_todo.txt.gz | shuf | parallel -j $NCORES --bar --joblog logs/parallel.jobs.log
+#time zcat commands_todo.txt.gz | shuf | parallel -j $NCORES --bar --joblog logs/parallel.jobs.log | tee logs/run_pipeline.out2.txt 2>&1
 
 # Exit tmux with Ctrl+b then d
 ```
@@ -211,28 +216,13 @@ time python 5_combine_results.py
 ```
 
 ```
-# The below steps were used when we found duplicate top_loci, which was due
-# to duplicated lines in the eQTL catalogue ingest. This has since been fixed,
-# so the below should not be needed.
-# Concatenate together all top_loci and credset files
-time find output -name "top_loci.json.gz" | while read -r file; do zcat -f "$file"; done | gzip > top_loci.concat.json.gz &
-time find output -name "credible_set.json.gz" | while read -r file; do zcat -f "$file"; done | gzip > credible_set.concat.json.gz
-
-# Remove duplicates
-# This should only be necessary because when we last ingested eQTL catalogue
-# I failed to remove duplicate rows first.
-time zcat top_loci.concat.json.gz | sort | uniq | gzip > top_loci.dedup.json.gz &
-time zcat credible_set.concat.json.gz | sort | uniq | gzip > credible_set.dedup.json.gz
-
-time python 5_combine_results_rmdup.py
-```
-
-```
 # Make a note as to what this finemapping run contained. E.g.:
-echo "Run with updated QTL datasets, and updated GWAS catalog studies. Re-ran all previous studies, since QTL datasets are the bulk of the fine-mapping work. Fixed an issue with 210825 version." > results/README.txt
+echo "Run with new GTEx sQTL dataset, and updated GWAS catalog studies. Re-ran the 8 studies that had flipped betas previously (IBD and lipids)." > results/README.txt
 
 # Copy the results to GCS
-bash 6_copy_results_to_gcs.sh
+version_date=`date +%y%m%d`
+#version_date=220228
+bash 6_copy_results_to_gcs.sh $version_date
 ```
 
 Number of top_loci raw: 1,623,534
@@ -248,11 +238,10 @@ Number of credset rows after dups removed: 40,910,064
 Steps like the below are needed if we are adding on to previous fine-mapping results, rather than recomputing everything. We assume that studies for which fine-mapping has been run are not present in the previous fine-mapped results that we are merging onto, otherwise we may get duplicates.
 
 ```
-version_date=`date +%y%m%d`
 
 # Copy down previous fine-mapping results into temp folder
-mkdir -p finemapping_to_merge/210923
-gsutil -m rsync -r gs://genetics-portal-dev-staging/finemapping/210923 finemapping_to_merge/210923
+mkdir -p finemapping_to_merge/220113_merged
+gsutil -m rsync -r gs://genetics-portal-dev-staging/finemapping/220113_merged finemapping_to_merge/220113_merged
 
 mkdir -p finemapping_to_merge/$version_date/
 cp -r results/* finemapping_to_merge/$version_date/
@@ -261,13 +250,19 @@ cp -r results/* finemapping_to_merge/$version_date/
 # Merge all old finemapping results with new
 #
 mkdir -p finemapping_merged
+time python 7_merge_finemap_results_fix.py --prev_results finemapping_to_merge/220113_merged --new_results finemapping_to_merge/$version_date/ --output finemapping_merged | tee finemapping_merged/merge_results.log
+
+# NOTE:
+# If adding new FinnGen results, then skip this step
+echo "Merged fine-mapping results from 220113_merged + 220224" > finemapping_merged/README.txt
+gsutil -m rsync -r $HOME/genetics-finemapping/finemapping_merged/ gs://genetics-portal-dev-staging/finemapping/${version_date}_merged
 
 # If there are all-new FinnGen results, then pass the --remove_previous_finngen flag.
-time python 7_merge_finemap_results.py --prev_results finemapping_to_merge/210923 --new_results finemapping_to_merge/$version_date/ --output finemapping_merged  
-#--remove_previous_finngen
+mkdir -p finemapping_merged_w_finngen
+time python 7_merge_finemap_results.py --prev_results finemapping_merged --new_results finngen/results/ --output finemapping_merged_w_finngen --remove_previous_finngen | tee finemapping_merged_w_finngen/merge_finngen.log
 
-echo "Merged fine-mapping results from 210923 + 211221" > finemapping_merged/README.txt
-gsutil -m rsync -r $HOME/genetics-finemapping/finemapping_merged/ gs://genetics-portal-dev-staging/finemapping/${version_date}_merged
+echo "Merged fine-mapping results from 220113_merged + 220224 + FinnGen R6. Removed 3 studies with bad data: GCST007236, GCST007799, GCST007800." > finemapping_merged_w_finngen/README.txt
+gsutil -m rsync -r $HOME/genetics-finemapping/finemapping_merged_w_finngen/ gs://genetics-portal-dev-staging/finemapping/${version_date}_merged
 ```
 
 ### Other notes
@@ -294,3 +289,21 @@ ls logs/study_id=*/phenotype_id=*/bio_feature=*/chrom=*/logfile.txt
   - Need to impute sex in plink file for X for cojo to work
 - Manifest NAs must be represented with "None"
 - P-value threshold is specified in 1_scan_input_parquets.py. Set to 5e-8 for GWAS, and (0.05 / num_tests) for mol trait
+
+#### OLD
+```
+# The below steps were used when we found duplicate top_loci, which was due
+# to duplicated lines in the eQTL catalogue ingest. This has since been fixed,
+# so the below should not be needed.
+# Concatenate together all top_loci and credset files
+time find output -name "top_loci.json.gz" | while read -r file; do zcat -f "$file"; done | gzip > top_loci.concat.json.gz &
+time find output -name "credible_set.json.gz" | while read -r file; do zcat -f "$file"; done | gzip > credible_set.concat.json.gz
+
+# Remove duplicates
+# This should only be necessary because when we last ingested eQTL catalogue
+# I failed to remove duplicate rows first.
+time zcat top_loci.concat.json.gz | sort | uniq | gzip > top_loci.dedup.json.gz &
+time zcat credible_set.concat.json.gz | sort | uniq | gzip > credible_set.dedup.json.gz
+
+time python 5_combine_results_rmdup.py
+```

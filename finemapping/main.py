@@ -11,7 +11,8 @@ import finemap as finemap
 import tempfile
 import pandas as pd
 
-def run_single_study(in_pq,
+def run_single_study(type,
+                     in_pq,
                      in_plink,
                      study_id,
                      phenotype_id=None,
@@ -51,6 +52,11 @@ def run_single_study(in_pq,
     # Extract top loci
     if logger:
         logger.info('Starting top loci detection')
+
+    split_ld_when_detecting_top_loci = False
+    if type in ['eqtl', 'sqtl', 'pqtl']:
+        split_ld_when_detecting_top_loci = True
+
     top_loci = fm_top_loci.detect_top_loci(
         sumstats,
         in_plink,
@@ -62,7 +68,8 @@ def run_single_study(in_pq,
         cojo_collinear=analysis_config['cojo_colin'],
         clump_dist=analysis_config['clump_dist'],
         clump_p=float(pval_threshold),
-        logger=logger
+        logger=logger,
+        split_ld=split_ld_when_detecting_top_loci
     )
     if logger:
         logger.info(

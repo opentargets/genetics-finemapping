@@ -8,12 +8,16 @@ import subprocess as sp
 import os
 import pandas as pd
 
-def get_conditional_top_loci(sumstats, in_plink, temp_dir,
+def get_conditional_top_loci(
+        sumstats,
+        in_plink,
+        temp_dir,
         maf=0.01,
         cojo_p=5e-8,
         cojo_window=500,
         cojo_collinear=0.9,
-        logger=None
+        logger=None,
+        split_ld=False
     ):
     ''' Uses GCTA-cojo to perform conditional analysis
     Args:
@@ -30,9 +34,26 @@ def get_conditional_top_loci(sumstats, in_plink, temp_dir,
     # Write sumstats
     sumstat_to_gcta(sumstats, gcta_in, gcta_snplist, p_threshold=cojo_p)
 
+    ld_file = in_plink.format(chrom=chrom)
+    if split_ld:
+        # Determine if we can use a split LD reference, which speeds up GCTA dramatically.
+        minpos = min(sumstats['pos'])
+        maxpos = max(sumstats['pos'])
+        minposMb = max(1, int(minpos / 1e6))
+        maxposMb = max(1, int(maxpos / 1e6))
+        if maxposMb - minposMb > 2:
+            logger.error('split_ld parameter is true, but sumstat window is too large ({0} - {1}) to use split LD. Reverting to full chromosome LD.'.format(minpos, maxpos))
+            split_ld = False
+        else:
+            # Take midpoint of window, in Mb
+            MB_pos = int((maxposMb + minposMb) / 2)
+            # We assume that the LD file per chromosome has been split into 3-Mb chunks
+            window_size = int(3e6)
+            ld_file = get_ld_fname(ld_file, MB_pos, window_size)
+
     # Construct command
     cmd = [
-           'gcta64 --bfile {0}'.format(in_plink.format(chrom=chrom)),
+           'gcta64 --bfile {0}'.format(ld_file),
            '--chr {0}'.format(chrom),
            '--extract {0}'.format(gcta_snplist),
            '--maf {0}'.format(maf),
@@ -68,6 +89,24 @@ def get_conditional_top_loci(sumstats, in_plink, temp_dir,
     top_loci = sumstats.loc[sumstats['variant_id'].isin(selected_snps), :]
 
     return top_loci
+
+def get_ld_fname(ld_file, MB_pos, window_size):
+    ''' Determine the "split" LD file name, given the base (chromosome-level) name of an LD file,
+        and check that it exists.
+    '''
+    def make_ld_fname(basefname, MB_pos):
+        window_start = int(MB_pos * 1e6 - 1e6)
+        window_end = int(window_start + window_size)
+        return(basefname + '.{:d}_{:d}'.format(window_start, window_end))
+
+    ld_fname = make_ld_fname(ld_file, MB_pos)
+    # Check that the LD file exists
+    if not os.path.exists(ld_fname + ".bim"):
+        # If not, try the previous window, as we may be near the chromosome end
+        ld_fname = make_ld_fname(ld_file, MB_pos - 1)
+        if not os.path.exists(ld_fname + ".bim"):
+            ld_fname = make_ld_fname(ld_file, MB_pos - 2)
+    return ld_fname
 
 def read_error_from_gcta_log(log_file):
     ''' Reads a GCTA log file and returns lines containing the word "error"
@@ -129,17 +168,7 @@ def perform_conditional_adjustment(sumstats,
         # We assume that the LD file per chromosome has been split into 3-Mb chunks
         window_size = int(3e6)
         MB_pos = max(1, int(var_pos / 1e6))
-        def get_ld_fname(basefname, MB_pos):
-            window_start = int(MB_pos * 1e6 - 1e6)
-            window_end = int(window_start + window_size)
-            return(basefname + '.{:d}_{:d}'.format(window_start, window_end))
-        ld_file = get_ld_fname(ld_file, MB_pos)
-        # Check that the LD file exists
-        if not os.path.exists(ld_file + ".bim"):
-            # If not, try the previous window, as we may be near the chromosome end
-            ld_file = get_ld_fname(ld_file, MB_pos - 1)
-            if not os.path.exists(ld_file + ".bim"):
-                ld_file = get_ld_fname(MB_pos - 2)
+        ld_file = get_ld_fname(ld_file, MB_pos, window_size)
 
     # Constuct command
     cmd =  [
@@ -150,6 +179,9 @@ def perform_conditional_adjustment(sumstats,
         '--cojo-cond {0}'.format(gcta_cond),
         '--out {0}'.format(gcta_out)
     ]
+
+    if logger:
+        logger.info('GCTA command:\n' + ' '.join(cmd))
 
     # Run command
     fnull = open(os.devnull, 'w')

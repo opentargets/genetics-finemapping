@@ -10,7 +10,10 @@ import os
 import pandas as pd
 from collections import OrderedDict
 
-def detect_top_loci(sumstats, in_plink, temp_dir,
+def detect_top_loci(
+        sumstats,
+        in_plink,
+        temp_dir,
         method='conditional',
         maf=0.01,
         cojo_p=5e-8,
@@ -18,7 +21,8 @@ def detect_top_loci(sumstats, in_plink, temp_dir,
         cojo_collinear=0.9,
         clump_dist=500,
         clump_p=5e-8,
-        logger=None):
+        logger=None,
+        split_ld=False):
     ''' Find top loci for a given study
     Args:
         TODO
@@ -62,7 +66,8 @@ def detect_top_loci(sumstats, in_plink, temp_dir,
             cojo_p=cojo_p,
             cojo_window=cojo_window,
             cojo_collinear=cojo_collinear,
-            logger=logger
+            logger=logger,
+            split_ld=split_ld
         )
     # Cluster using distance based clumping
     elif method == 'distance':
