@@ -3,6 +3,8 @@
 #
 # Jeremy Schwartzentruber
 #
+# This code was used for genetics R6 and is no longer needed.
+#
 import pandas as pd
 import pyspark.sql
 

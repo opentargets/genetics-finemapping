@@ -5,7 +5,7 @@ NOTE: When ingesting a new FinnGen version, you will need to update paths below 
 FinnGen runs fine-mapping using in-sample LD. We could not reproduce a fine-mapping analysis at a similar quality, and so it is better to import their results.
 They identify associated regions, and then merge together nearby regions, followed by runnning both FINEMAP and SuSIE. I don't see much reason to include both of these, and we will use the SuSIE output since it is simpler to work with.
 FinnGen fine-mapping results can be browsed here:
-https://console.cloud.google.com/storage/browser/finngen-public-data-r5/finemapping/
+https://console.cloud.google.com/storage/browser/finngen-public-data-r6/finemapping/
 
 We use only the ".snp.bgz" SuSIE output files, which have the following format:
 ```
@@ -19,12 +19,12 @@ We use the finngen_R*_<endpoint>.SUSIE.snp.bgz file for a trait to determine cre
 
 Note: we discussed whether to include a single top variant from each FinnGen fine-mapping region, or to include the top variant from each credible set within a region (as long as the variant had p < 5e-8). We decided to include only the single top variant, because otherwise downstream steps such as colocalisation may not work. In the coloc pipeline (as of 2021-Apr) we use GCTA to get conditionally independent sumstats for each top variant (conditioning on other top_loci variants in the region). With FinnGen we can't do this, since the top variants were determined using SuSIE, and also because we don't have an equivalent reference panel. We wouldn't be able to run colocalisation with conditional sumstats, and so we could only do it using the full signal, which wouldn't correctly represent the secondary/tertiary signals. HOWEVER, in the future FinnGen and eQTL catalogue may both release the direct SuSIE outputs / Bayes Factors for all SNPs (or a filtered subset), and these could be used directly with the new version of coloc to do colocalisations with each independent signal from SuSIE.
 
-### FinnGen R5 stats
-2925 endpoints in R5 manifest
-2781 studies with fine-mapping outputs (SUSIE .snp.bgz files)
-2781 studies with fine-mapping that are in manifest
-1267 studies with fine-mapping where credible set is retained (some studies have no GW-sig loci, or the credible set has no SNP that is GW-sig)
-5707 top loci
+### FinnGen R6 stats
+2861 endpoints in R6 manifest
+2802 studies with fine-mapping outputs (SUSIE .snp.bgz files)
+2802 studies with fine-mapping that are in manifest
+1291 studies with fine-mapping where credible set is retained (some studies have no GW-sig loci, or the credible set has no SNP that is GW-sig)
+6861 top loci
 
 ### Requirements
 - Spark v2.4.0
@@ -53,9 +53,6 @@ A single study's SuSIE output can be imported using the function below.
 ```
 # Activate environment
 source activate finemap
-
-# Edit config file (this needs selecting with --config_file arg)
-nano configs/analysis.config.yaml
 
 # View args
 $ python finngen_finemapping_ingest.py --help
@@ -86,16 +83,17 @@ cd $HOME/genetics-finemapping/finngen
 mkdir inputs
 
 # Get list of phenotypes
-curl https://r5.finngen.fi/api/phenos | jq -r '.[]| @json' > inputs/r5_finngen.json
+curl https://r6.finngen.fi/api/phenos | jq -r '.[]| @json' > inputs/r6_finngen.json
 # May need to first run: sudo apt install jq
 
 # Copy all SuSIE SNP results into finngen input data folder
 mkdir -p $HOME/genetics-finemapping/finngen/data
-gsutil -m cp gs://finngen-public-data-r5/finemapping/*.SUSIE.snp.bgz $HOME/genetics-finemapping/finngen/data
+gsutil -m cp gs://finngen-public-data-r6/finemapping/full/*.SUSIE.snp.bgz $HOME/genetics-finemapping/finngen/data
+gsutil -m cp gs://finngen-public-data-r6/finemapping/summaries/*.SUSIE.*.tsv $HOME/genetics-finemapping/finngen/data_summaries
 
 # There will be fewer files than the number of phenotypes, because some
 # phenotypes have no significant loci and so no fine-mapping.
-ls $HOME/genetics-finemapping/finngen/data/finngen_R5*.SUSIE.snp.bgz > inputs/input_paths_finngen.txt
+ls $HOME/genetics-finemapping/finngen/data/finngen_R6*.SUSIE.snp.bgz > inputs/input_paths_finngen.txt
 ```
 
 #### Step 2: Make manifest file
@@ -141,7 +139,8 @@ python 2_make_commands.py --quiet
 
 # Edit args in `run_commands.sh` (e.g. number of cores) and then
 # For R5, took 13 min on 7 cores
-time bash 3_run_commands.sh
+NCORES=7
+time bash 3_run_commands.sh $NCORES
 
 # Exit tmux with Ctrl+b then d
 
@@ -169,12 +168,19 @@ zcat results/logfiles.txt.gz | grep "No SNPs in any credible set" | wc -l
 zcat commands_todo.txt.gz | wc -l
 
 # Make a note about the run
-echo "FinnGen R5 - converted SuSIE credible set output to top_loci and credset formats" > results/README.txt
+echo "FinnGen R6 - converted SuSIE credible set output to top_loci and credset formats" > results/README.txt
 
 # Copy the results to GCS
 version_date=`date +%y%m%d`
 gsutil -m rsync -r $HOME/genetics-finemapping/finngen/results/ gs://genetics-portal-dev-staging/finemapping/finngen_$version_date
 ```
+
+### (Old) FinnGen R5 stats
+2925 endpoints in R5 manifest
+2781 studies with fine-mapping outputs (SUSIE .snp.bgz files)
+2781 studies with fine-mapping that are in manifest
+1267 studies with fine-mapping where credible set is retained (some studies have no GW-sig loci, or the credible set has no SNP that is GW-sig)
+5707 top loci
 
 ### (Old) FinnGen R4 stats
 2264 endpoints in R4 manifest
