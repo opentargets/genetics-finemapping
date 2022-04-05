@@ -140,16 +140,20 @@ def main():
         'p': 'pval'})
     cred_sets['chrom'] = cred_sets['chrom'].str.replace('chr', '')
 
-    # FinnGen didn't do conditional analysis, so just use the original beta, etc
-    # I'm not sure if these fields matter.
+    # FinnGen didn't do conditional analysis, so we just use the original beta, se.
+    # Ideally FinnGen would provide values for these that are specific to the
+    # credible set - or at least logABFs for credset variants. As of this writing,
+    # only marginal values are provided:
+    # https://finngen.gitbook.io/documentation/data-description#fine-mapping-results
+    # However, per email discussions in summary 2021, they may provide these outputs
+    # as of R7.
     cred_sets.loc[:, 'beta_cond'] = cred_sets.loc[:, 'beta']
     cred_sets.loc[:, 'se_cond'] = cred_sets.loc[:, 'se']
     cred_sets.loc[:, 'pval_cond'] = cred_sets.loc[:, 'pval']
 
-    # I'm not sure if we need to calculate the logABF for FinnGen. It's part of the
-    # credset table, but I wouldn't consider it a normal fine-mapping output. It's
-    # only used in the conditional analysis / single-causal variant approach used
-    # for our other GWAS.
+    # We could compute marginal logABF values for the credset table, but this requires
+    # the case/control ratio. Since we don't currently use this, we will see if it is
+    # provided directly in FinnGen R7 release.
     cred_sets['logABF'] = None
 
     # Format output table
