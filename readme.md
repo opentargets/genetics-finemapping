@@ -221,7 +221,7 @@ echo "Run with new GTEx sQTL dataset, and updated GWAS catalog studies. Re-ran t
 
 # Copy the results to GCS
 version_date=`date +%y%m%d`
-#version_date=220228
+#version_date=220224
 bash 6_copy_results_to_gcs.sh $version_date
 ```
 
@@ -250,7 +250,7 @@ cp -r results/* finemapping_to_merge/$version_date/
 # Merge all old finemapping results with new
 #
 mkdir -p finemapping_merged
-time python 7_merge_finemap_results_fix.py --prev_results finemapping_to_merge/220113_merged --new_results finemapping_to_merge/$version_date/ --output finemapping_merged | tee finemapping_merged/merge_results.log
+time python 7_merge_finemap_results.py --prev_results finemapping_to_merge/220113_merged --new_results finemapping_to_merge/${version_date}/ --output finemapping_merged | tee finemapping_merged/merge_results.log
 
 # NOTE:
 # If adding new FinnGen results, then skip this step
