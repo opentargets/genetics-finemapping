@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Ed Mountjoy
+# Modified by Bruno Ariano
 #
 '''
 # Set SPARK_HOME and PYTHONPATH to use 2.4.0
@@ -31,9 +32,10 @@ def main():
     gwas_pval_threshold = 5e-8
 
     # Paths
-    gwas_pattern = '/home/js29/genetics-finemapping/data/filtered/significant_window_2mb/gwas/*.parquet'
-    mol_pattern = '/home/js29/genetics-finemapping/data/filtered/significant_window_2mb/molecular_trait/*.parquet'
-    out_path = '/home/js29/genetics-finemapping/tmp/filtered_input'
+    # Paths are changed to work on the cloud
+    gwas_pattern = 'gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/*.parquet'
+    mol_pattern = 'gs://genetics-portal-dev-sumstats/filtered/significant_window_2mb/molecular_trait/*.parquet'
+    out_path = 'gs://genetics-portal-dev-analysis/ba13/tmp/filtered_input'
 
     # Load GWAS dfs
     strip_path_gwas = udf(lambda x: x.replace('file:', '').split('/part-')[0], StringType())
@@ -75,6 +77,7 @@ def main():
     )
 
     # Write
+    
     (
         df
           .coalesce(300)
