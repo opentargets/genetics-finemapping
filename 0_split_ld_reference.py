@@ -15,7 +15,7 @@ def main():
 
     # Parse args
     args = parse_args()
-
+    #Change this to 10 Mb
     window_size = int(3e6)
     window_spacing = int(1e6)
 
