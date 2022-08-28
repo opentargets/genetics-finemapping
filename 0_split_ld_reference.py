@@ -16,7 +16,7 @@ def main():
     # Parse args
     args = parse_args()
 
-    window_size = int(3e6)
+    window_size = int(4e6)
     window_spacing = int(1e6)
 
     chrom_lengths = pd.read_csv('configs/grch38_chrom_lengths.tsv', sep='\t')
