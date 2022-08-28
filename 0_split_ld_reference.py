@@ -9,13 +9,13 @@
 # I have found a window size of 10 Mb of 
 import pandas as pd
 import os
+import hydra
 import subprocess as sp
 import argparse
 
+@hydra.main(config_path=os.getcwd(), config_name="config")
 
-def main():
-
-    # Parse args
+# Parse args
     args = parse_args()
     # Maybe replace with SNP density?
     window_size = int(10e6)
