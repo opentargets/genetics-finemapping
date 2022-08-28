@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Splits the LD reference panel into multiple subfiles, to greatly speed up
-# GCTA-cojo. Each subfile is a 3-Mb window, so that for any top_loci variant,
+# GCTA-cojo. Each subfile is a 4-Mb window, so that for any top_loci variant,
 # we can use a subfile that has the top_loci variant +- 1 Mb.
 
 import pandas as pd
