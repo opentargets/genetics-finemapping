@@ -1,6 +1,6 @@
 files:
   #ld reference dataset
-  LD_reference: gs://open-targets-ukbb/genotypes/ukb_v3_downsampled10k/
+  LD_reference: gs://genetics-portal-dev-staging/UKBiobank_reference_finemapping/
   chrom_lengths: configs/grch38_chrom_lengths.tsv
 
 # region_threshold

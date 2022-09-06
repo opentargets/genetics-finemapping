@@ -19,10 +19,12 @@ def main(cfg):
     chrom_lengths = pd.read_csv(cfg.files.chrom_lengths, sep='\t')
     window_size = cfg.thresholds.window_size
     window_spacing = cfg.thresholds.window_spacing
+    path_LD_reference = cfg.files.LD_reference
+    
     # Loop through each chromosome and use plink to split the ref panel into
     # overlapping windows
     for index, row in chrom_lengths.iterrows():
-        chr_ld_path = cfg.files.LD_reference + chrom=row['chrom']
+        chr_ld_path = path_LD_reference + 'ukb_v3_chr' + str(row['chrom']) +'.downsampled10k'
         window_start = int(0)
         while (window_start + window_size - window_spacing) < row['length']:
             # Define window and output path for subfile of main LD file
