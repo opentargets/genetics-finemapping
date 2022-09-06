@@ -1,6 +1,7 @@
 files:
   #ld reference dataset
-  gs://open-targets-ukbb/genotypes/ukb_v3_downsampled10k/
+  LD_reference: gs://open-targets-ukbb/genotypes/ukb_v3_downsampled10k/
+  chrom_lengths: configs/grch38_chrom_lengths.tsv
 
 # region_threshold
 #to remove this as all are now set to b38

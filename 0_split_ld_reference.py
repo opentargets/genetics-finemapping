@@ -15,25 +15,14 @@ import argparse
 
 @hydra.main(config_path=os.getcwd(), config_name="config")
 
-# Parse args
-    args = parse_args()
-<<<<<<< HEAD
-    # Maybe replace with SNP density?
-    window_size = int(10e6)
-=======
-    #Change this to 10 Mb
-    window_size = int(3e6)
->>>>>>> 92f52093f9ca59444a02038ad79079f771296108
-    window_spacing = int(1e6)
-
-    chrom_lengths = pd.read_csv('configs/grch38_chrom_lengths.tsv', sep='\t')
-
+def main(cfg):
+    chrom_lengths = pd.read_csv(cfg.files.chrom_lengths, sep='\t')
+    window_size = cfg.thresholds.window_size
+    window_spacing = cfg.thresholds.window_spacing
     # Loop through each chromosome and use plink to split the ref panel into
     # overlapping windows
     for index, row in chrom_lengths.iterrows():
-        chr_ld_path = args.path.format(chrom=row['chrom'])
-        print(chr_ld_path)
-
+        chr_ld_path = cfg.files.LD_reference + chrom=row['chrom']
         window_start = int(0)
         while (window_start + window_size - window_spacing) < row['length']:
             # Define window and output path for subfile of main LD file
@@ -58,24 +47,11 @@ import argparse
             if cp.returncode != 0:
                 print('Failed on plink command:\n{}'.format(cmd))
                 #return cp.returncode
-            
             window_start = window_start + window_spacing
-            
-
     return 0
 
 
-def parse_args():
-    """ Load command line args """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--path',
-                        metavar="<string>",
-                        help='Path to LD reference; {chrom} in place of each chromosome name',
-                        type=str,
-                        required=True)
-    args = parser.parse_args()
-    return args
-
 
 if __name__ == '__main__':
+
     main()
