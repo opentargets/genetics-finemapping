@@ -1,3 +1,6 @@
+> [!WARNING]
+> **Superseded.** The work in this repository has been superseded by the new pan-GWAS pipeline released as part of the consolidated [Open Targets Platform](https://platform.opentargets.org) in March 2025. See [A step change in common disease genetics](https://blog.opentargets.org/a-step-change-in-common-disease-genetics/) for context.
+
 Open Target Genetics fine-mapping pipeline
 ==========================================
 
